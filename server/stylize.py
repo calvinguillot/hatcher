@@ -718,7 +718,7 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
         
     return group
 
-def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, min_len=10, algo='default', smoothing=0.0, smooth_method='bezier'):
+def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, min_len=10, algo='default', smoothing=0.0, smooth_method='bezier', border_margin=5):
     """
     Finds edges and traces them with short strokes.
     Supports filtering by minimum segment length.
@@ -727,6 +727,9 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
         - 'canny' (approximation)
         - 'sobel' (Sobel operator - https://github.com/ErykBrol/Sobel-Edge-Detector)
         - 'hed' (Holistically-Nested Edge Detection - https://github.com/s9xie/hed)
+    
+    Args:
+        border_margin: Pixels to ignore from each border (prevents detecting image borders as edges)
     """
     edges = None
     
@@ -769,9 +772,7 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
         
     all_paths = []
     
-    # Border margin to ignore edges at image borders
-    border_margin = 5  # pixels to ignore from each border
-    
+    # Border margin to ignore edges at image borders (now configurable via parameter)
     # Scan step
     step = 2
     

@@ -57,6 +57,7 @@ def process_image():
         edge_algo = data.get('edge_algo', 'default')
         edge_smoothing = float(data.get('edge_smoothing', 0.0))
         edge_smooth_method = data.get('edge_smooth_method', 'bezier')
+        edge_border_margin = int(data.get('edge_border_margin', 5))
         
         hatch1_thresh = int(data.get('hatch1_thresh', 200))
         hatch2_thresh = int(data.get('hatch2_thresh', 140))
@@ -97,7 +98,8 @@ def process_image():
                                        min_len=edge_min_len,
                                        algo=edge_algo,
                                        smoothing=edge_smoothing,
-                                       smooth_method=edge_smooth_method)
+                                       smooth_method=edge_smooth_method,
+                                       border_margin=edge_border_margin)
         edge_layer['id'] = 'layer-edges'
         
         # 2. Hatching Layers

@@ -487,6 +487,10 @@
                         <input type="checkbox" id="hatch_enabled" checked>
                     </div>
                 </div>
+                <div class="control-item" style="margin-top: 8px;">
+                    <div class="control-row"><label>Edge Border Margin</label><span id="edge_border_margin_val" class="value-display">5</span></div>
+                    <input type="range" id="edge_border_margin" min="0" max="50" value="5" title="Pixels to ignore from image borders (prevents detecting image edges as lines)">
+                </div>
             </div>
 
             <!-- Edge Detection -->
@@ -658,7 +662,7 @@
         // Settings Map
         const settings = [
             'scale', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method',
-            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method',
+            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin',
             'hatch1_thresh', 'hatch1_angle', 
             'hatch2_thresh', 'hatch2_angle', 
             'hatch3_thresh', 'hatch3_angle'
