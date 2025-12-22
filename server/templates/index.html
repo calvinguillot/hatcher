@@ -512,7 +512,14 @@
                     <option value="canny">Canny Approx (Strong)</option>
                     <option value="sobel">Sobel Operator</option>
                     <option value="hed">HED (Holistically-Nested)</option>
+                    <option value="yolo">YOLO11n (Segmentation)</option>
                 </select>
+            </div>
+            <div id="yolo_preview_option" style="display:none; margin-bottom:8px;">
+                <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; height: 100%;">
+                    <label for="yolo_show_preview" style="cursor:pointer">Show Segmentation Preview</label>
+                    <input type="checkbox" id="yolo_show_preview">
+                </div>
             </div>
             <div class="grid-2">
                 <div class="control-item">
@@ -672,7 +679,7 @@
         // Settings Map
         const settings = [
             'scale', 'brightness', 'contrast', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method',
-            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin',
+            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'yolo_show_preview',
             'hatch1_thresh', 'hatch1_angle', 
             'hatch2_thresh', 'hatch2_angle', 
             'hatch3_thresh', 'hatch3_angle'
@@ -684,6 +691,15 @@
             if (display) display.textContent = val;
         }
 
+        // Show/hide YOLO preview option based on edge algorithm
+        function updateYOLOPreviewVisibility() {
+            const edgeAlgo = document.getElementById('edge_algo');
+            const yoloPreviewOption = document.getElementById('yolo_preview_option');
+            if (edgeAlgo && yoloPreviewOption) {
+                yoloPreviewOption.style.display = edgeAlgo.value === 'yolo' ? 'block' : 'none';
+            }
+        }
+
         // Attach listeners
         settings.forEach(id => {
             const el = document.getElementById(id);
@@ -693,10 +709,19 @@
                 el.addEventListener(eventType, (e) => {
                     const val = el.type === 'checkbox' ? el.checked : e.target.value;
                     updateValue(id, val);
+                    
+                    // Update YOLO preview visibility when edge algorithm changes
+                    if (id === 'edge_algo') {
+                        updateYOLOPreviewVisibility();
+                    }
+                    
                     triggerAutoProcess();
                 });
             }
         });
+
+        // Initialize YOLO preview visibility
+        updateYOLOPreviewVisibility();
 
         function triggerAutoProcess() {
             if (!currentFilename) return;
@@ -785,6 +810,38 @@
                 setContent('viewEdges', 'viewEdgesInner', svgText);
                 setContent('viewHatching', 'viewHatchingInner', svgText);
                 setContent('viewCombined', 'viewCombinedInner', svgText);
+                
+                // Handle YOLO segmentation preview overlay
+                const yoloShowPreview = document.getElementById('yolo_show_preview')?.checked;
+                const edgeAlgo = document.getElementById('edge_algo')?.value;
+                if (yoloShowPreview && edgeAlgo === 'yolo' && data.segmentation_preview) {
+                    // Add segmentation preview overlay to edges view
+                    const edgesInner = document.getElementById('viewEdgesInner');
+                    if (edgesInner) {
+                        // Remove existing overlay if any
+                        const existingOverlay = edgesInner.querySelector('.yolo-segmentation-overlay');
+                        if (existingOverlay) {
+                            existingOverlay.remove();
+                        }
+                        
+                        // Create overlay image
+                        const overlay = document.createElement('img');
+                        overlay.src = 'data:image/png;base64,' + data.segmentation_preview;
+                        overlay.className = 'yolo-segmentation-overlay';
+                        overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.5; pointer-events: none; z-index: 10;';
+                        edgesInner.style.position = 'relative';
+                        edgesInner.appendChild(overlay);
+                    }
+                } else {
+                    // Remove overlay if disabled
+                    const edgesInner = document.getElementById('viewEdgesInner');
+                    if (edgesInner) {
+                        const existingOverlay = edgesInner.querySelector('.yolo-segmentation-overlay');
+                        if (existingOverlay) {
+                            existingOverlay.remove();
+                        }
+                    }
+                }
                 
                 // Original image is already set during upload
                 

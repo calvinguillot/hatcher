@@ -5,6 +5,7 @@ from PIL import Image, ImageEnhance
 import svgwrite
 import stylize  # Import your existing module
 import traceback
+import numpy as np
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -60,6 +61,7 @@ def process_image():
         edge_smoothing = float(data.get('edge_smoothing', 0.0))
         edge_smooth_method = data.get('edge_smooth_method', 'bezier')
         edge_border_margin = int(data.get('edge_border_margin', 5))
+        yolo_show_preview = data.get('yolo_show_preview', False)
         
         hatch1_thresh = int(data.get('hatch1_thresh', 200))
         hatch2_thresh = int(data.get('hatch2_thresh', 140))
@@ -97,6 +99,35 @@ def process_image():
         
         width, height = original_img.size
         gray_img = original_img.convert("L")
+        
+        # Generate YOLO segmentation preview if requested
+        segmentation_preview_b64 = None
+        if edge_algo == 'yolo' and yolo_show_preview:
+            try:
+                import base64
+                from io import BytesIO
+                # Convert threshold to confidence
+                conf = max(0.001, min(1.0, edge_thresh / 255.0))
+                # Get segmentation mask
+                edges, mask = stylize.yolo_segmentation(gray_img, conf=conf, return_mask=True)
+                # Create colored preview: convert mask to RGBA with colored overlay
+                # Use a semi-transparent color overlay on the original image
+                mask_rgba = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                # Color the mask areas (e.g., green with 50% opacity)
+                mask_array = np.array(mask)
+                colored_mask = np.zeros((height, width, 4), dtype=np.uint8)
+                colored_mask[mask_array > 0] = [0, 255, 0, 128]  # Green with 50% opacity
+                mask_rgba = Image.fromarray(colored_mask, mode='RGBA')
+                
+                # Convert to base64
+                buffer = BytesIO()
+                mask_rgba.save(buffer, format='PNG')
+                segmentation_preview_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                print("YOLO segmentation preview generated")
+            except Exception as e:
+                print(f"Error generating YOLO preview: {e}")
+                import traceback
+                traceback.print_exc()
         
         # Create SVG
         dwg = svgwrite.Drawing(output_path, size=(width, height), profile='tiny')
@@ -156,11 +187,17 @@ def process_image():
         
         dwg.save()
         
-        return jsonify({
+        response_data = {
             'success': True,
             'url': f"/static/output/{output_filename}",
             'download_name': output_filename
-        })
+        }
+        
+        # Add segmentation preview if available
+        if segmentation_preview_b64:
+            response_data['segmentation_preview'] = segmentation_preview_b64
+        
+        return jsonify(response_data)
         
     except Exception as e:
         traceback.print_exc()

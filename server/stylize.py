@@ -23,6 +23,13 @@ try:
 except ImportError:
     HED_AVAILABLE = False
 
+# Optional imports for YOLO
+try:
+    from ultralytics import YOLO
+    YOLO_AVAILABLE = True
+except ImportError:
+    YOLO_AVAILABLE = False
+
 def get_brightness(pixel):
     """Returns brightness of a pixel (0-255)."""
     if isinstance(pixel, int):
@@ -590,6 +597,193 @@ def hed_edge_detection(img_gray, model_path=None):
         print(f"Error in HED edge detection: {e}. Falling back to Sobel.")
         return sobel_edge_detection(img_gray)
 
+def yolo_segmentation(img, model_path=None, conf=0.25, return_mask=False):
+    """
+    YOLO11n segmentation to extract object boundaries as edges.
+    
+    Args:
+        img: PIL Image (can be grayscale or RGB)
+        model_path: Path to YOLO model file (default: server/static/models/yolo11n-seg.pt)
+        conf: Confidence threshold for detections (0.0-1.0). Default 0.25.
+              Lower values detect more objects but may include false positives.
+        return_mask: If True, also returns the combined mask image for preview.
+    
+    Returns:
+        PIL Image with detected edges from segmentation masks
+        If return_mask=True, returns tuple: (edges_image, mask_image)
+    """
+    if not YOLO_AVAILABLE:
+        print("Warning: Ultralytics YOLO not available. Falling back to Sobel edge detection.")
+        if img.mode != 'L':
+            img = img.convert('L')
+        return sobel_edge_detection(img, threshold=50)
+    
+    try:
+        # Convert to RGB if needed (YOLO expects RGB)
+        if img.mode != 'RGB':
+            img_rgb = img.convert('RGB')
+        else:
+            img_rgb = img
+        
+        # Default model path
+        if model_path is None:
+            # Try to find the model relative to this file
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(current_dir, 'static', 'models', 'yolo11n-seg.pt')
+            if not os.path.exists(model_path):
+                # Try alternative path
+                model_path = 'static/models/yolo11n-seg.pt'
+        
+        if not os.path.exists(model_path):
+            print(f"Warning: YOLO model not found at {model_path}. Falling back to Sobel.")
+            return sobel_edge_detection(img_rgb.convert('L'), threshold=50)
+        
+        # Load YOLO model
+        model = YOLO(model_path)
+        
+        # Run inference with confidence threshold
+        # conf parameter controls minimum confidence for detections (0.0-1.0)
+        # Lower values = more detections (higher recall, more false positives)
+        # Higher values = fewer but more confident detections (higher precision)
+        results = model(img_rgb, conf=conf, verbose=False)
+        
+        # Get image dimensions
+        width, height = img_rgb.size
+        
+        # Create a binary mask for all detected objects
+        combined_mask = np.zeros((height, width), dtype=np.uint8)
+        
+        num_detections = 0
+        num_masks_processed = 0
+        
+        # Process each result
+        for result in results:
+            # Check if there are any detections at all
+            if hasattr(result, 'boxes') and result.boxes is not None:
+                num_detections = len(result.boxes)
+                print(f"YOLO found {num_detections} detections")
+            
+            # Check for masks
+            if result.masks is not None:
+                print(f"YOLO masks found: {result.masks is not None}")
+                
+                # Access masks data
+                masks_data = result.masks.data
+                
+                if masks_data is not None:
+                    try:
+                        # Get masks in matrix format (num_objects x H x W)
+                        if hasattr(masks_data, 'cpu'):
+                            masks = masks_data.cpu().numpy()
+                        else:
+                            masks = np.array(masks_data)
+                        
+                        print(f"Mask shape: {masks.shape}, dtype: {masks.dtype}")
+                        
+                        # Handle different mask formats
+                        if masks.ndim == 2:
+                            # Single mask
+                            masks = masks[np.newaxis, :, :]
+                        
+                        # Combine all masks
+                        for i, mask in enumerate(masks):
+                            num_masks_processed += 1
+                            print(f"Processing mask {i+1}/{len(masks)}, shape: {mask.shape}, min: {mask.min()}, max: {mask.max()}")
+                            
+                            # Normalize mask values to 0-1 range if needed
+                            if mask.max() > 1.0:
+                                mask = mask / 255.0
+                            
+                            # Resize mask to image dimensions if needed
+                            if mask.shape != (height, width):
+                                # Convert mask to PIL Image for resizing
+                                mask_img = Image.fromarray((mask * 255).astype(np.uint8), mode='L')
+                                mask_img = mask_img.resize((width, height), Image.Resampling.LANCZOS)
+                                mask = np.array(mask_img) > 127
+                            else:
+                                mask = mask > 0.5
+                            
+                            combined_mask[mask] = 255
+                            print(f"Mask {i+1} added, combined_mask now has {np.sum(combined_mask > 0)} pixels")
+                    except Exception as e:
+                        print(f"Warning: Error processing YOLO masks: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        continue
+            else:
+                print("No masks found in YOLO results")
+                # If no masks but we have boxes, we could use bounding boxes as edges
+                if hasattr(result, 'boxes') and result.boxes is not None and len(result.boxes) > 0:
+                    print(f"Found {len(result.boxes)} boxes, using bounding boxes as edges")
+                    # Draw bounding boxes as edges
+                    boxes = result.boxes
+                    for box in boxes:
+                        # Get box coordinates (x1, y1, x2, y2)
+                        if hasattr(box, 'xyxy'):
+                            coords = box.xyxy[0].cpu().numpy() if hasattr(box.xyxy[0], 'cpu') else box.xyxy[0]
+                        elif hasattr(box, 'xywh'):
+                            # Convert center-width-height to x1-y1-x2-y2
+                            xywh = box.xywh[0].cpu().numpy() if hasattr(box.xywh[0], 'cpu') else box.xywh[0]
+                            x, y, w, h = xywh
+                            coords = [x - w/2, y - h/2, x + w/2, y + h/2]
+                        else:
+                            continue
+                        
+                        x1, y1, x2, y2 = map(int, coords)
+                        # Draw rectangle edges
+                        combined_mask[max(0, y1-1):min(height, y1+1), max(0, x1):min(width, x2)] = 255  # top
+                        combined_mask[max(0, y2-1):min(height, y2+1), max(0, x1):min(width, x2)] = 255  # bottom
+                        combined_mask[max(0, y1):min(height, y2), max(0, x1-1):min(width, x1+1)] = 255  # left
+                        combined_mask[max(0, y1):min(height, y2), max(0, x2-1):min(width, x2+1)] = 255  # right
+        
+        print(f"Total masks processed: {num_masks_processed}, combined_mask pixels: {np.sum(combined_mask > 0)}")
+        
+        # If no detections at all, fall back to regular edge detection
+        if np.sum(combined_mask) == 0:
+            print("No YOLO detections found, falling back to Sobel edge detection")
+            return sobel_edge_detection(img_rgb.convert('L'), threshold=50)
+        
+        # Extract edges from the combined mask using morphological operations
+        # We'll use edge detection on the mask to get clean boundaries
+        if SCIPY_AVAILABLE:
+            # Use morphological gradient to get edges
+            from scipy import ndimage
+            # Create a structuring element
+            struct = np.ones((3, 3), dtype=np.uint8)
+            # Dilate and erode to get edges
+            dilated = ndimage.binary_dilation(combined_mask > 0, structure=struct)
+            eroded = ndimage.binary_erosion(combined_mask > 0, structure=struct)
+            edges = (dilated ^ eroded).astype(np.uint8) * 255
+        else:
+            # Fallback: use simple edge detection
+            # Convert mask to PIL Image and use FIND_EDGES filter
+            mask_img = Image.fromarray(combined_mask, mode='L')
+            edges = mask_img.filter(ImageFilter.FIND_EDGES)
+            edges = ImageOps.autocontrast(edges)
+            edges = np.array(edges)
+        
+        # Convert to PIL Image
+        edges_img = Image.fromarray(edges, mode='L')
+        
+        if return_mask:
+            # Return both edges and mask for preview
+            mask_img = Image.fromarray(combined_mask, mode='L')
+            return edges_img, mask_img
+        return edges_img
+        
+    except Exception as e:
+        print(f"Error in YOLO segmentation: {e}. Falling back to Sobel.")
+        import traceback
+        traceback.print_exc()
+        if img.mode != 'L':
+            img = img.convert('L')
+        fallback_edges = sobel_edge_detection(img, threshold=50)
+        if return_mask:
+            # Return empty mask on error
+            empty_mask = Image.new('L', img.size, 0)
+            return fallback_edges, empty_mask
+        return fallback_edges
+
 def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black', min_len=0, smoothing=0.0, smooth_method='bezier'):
     """
     Generates hatching lines at a specific angle for pixels darker than threshold.
@@ -727,6 +921,7 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
         - 'canny' (approximation)
         - 'sobel' (Sobel operator - https://github.com/ErykBrol/Sobel-Edge-Detector)
         - 'hed' (Holistically-Nested Edge Detection - https://github.com/s9xie/hed)
+        - 'yolo' (YOLO11n segmentation - extracts edges from segmentation masks)
     
     Args:
         border_margin: Pixels to ignore from each border (prevents detecting image borders as edges)
@@ -750,6 +945,16 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
         edges = hed_edge_detection(img_gray)
         # Apply threshold
         edges = edges.point(lambda p: 255 if p > threshold else 0)
+    elif algo == 'yolo':
+        # YOLO11n segmentation - extract edges from segmentation masks
+        # Convert threshold (0-255) to confidence (0.0-1.0) for YOLO
+        # threshold=50 -> conf=0.196, threshold=128 -> conf=0.5, threshold=200 -> conf=0.784
+        conf = max(0.001, min(1.0, threshold / 255.0))
+        print(f"Using YOLO with confidence threshold: {conf:.3f} (from edge threshold: {threshold})")
+        # Note: return_mask is handled at app.py level, not here
+        edges = yolo_segmentation(img_gray, conf=conf, return_mask=False)
+        # Apply threshold (YOLO already produces binary-like edges, but threshold can refine)
+        edges = edges.point(lambda p: 255 if p > threshold else 0)
     else:
         # Default FIND_EDGES
         edges = img_gray.filter(ImageFilter.FIND_EDGES)
@@ -769,6 +974,8 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
         min_val = threshold // 2  # Sobel produces gradient magnitudes
     elif algo == 'hed':
         min_val = threshold // 2  # HED produces probability maps
+    elif algo == 'yolo':
+        min_val = threshold // 2  # YOLO produces binary-like edges
         
     all_paths = []
     
