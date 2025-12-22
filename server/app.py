@@ -1,7 +1,7 @@
 import os
 import time
 from flask import Flask, render_template, request, send_from_directory, jsonify
-from PIL import Image
+from PIL import Image, ImageEnhance
 import svgwrite
 import stylize  # Import your existing module
 import traceback
@@ -41,6 +41,8 @@ def process_image():
         
         # Parameters
         scale = float(data.get('scale', 0.5))
+        brightness = float(data.get('brightness', 1.0))
+        contrast = float(data.get('contrast', 1.0))
         
         # General settings
         hatch_stroke = float(data.get('hatch_stroke', 0.5))
@@ -82,6 +84,16 @@ def process_image():
             w = int(original_img.width * scale)
             h = int(original_img.height * scale)
             original_img = original_img.resize((w, h), Image.Resampling.LANCZOS)
+        
+        # Apply brightness adjustment
+        if brightness != 1.0:
+            enhancer = ImageEnhance.Brightness(original_img)
+            original_img = enhancer.enhance(brightness)
+        
+        # Apply contrast adjustment
+        if contrast != 1.0:
+            enhancer = ImageEnhance.Contrast(original_img)
+            original_img = enhancer.enhance(contrast)
         
         width, height = original_img.size
         gray_img = original_img.convert("L")

@@ -487,6 +487,16 @@
                         <input type="checkbox" id="hatch_enabled" checked>
                     </div>
                 </div>
+                <div class="grid-2" style="margin-top: 8px;">
+                    <div class="control-item">
+                        <div class="control-row"><label>Brightness</label><span id="brightness_val" class="value-display">1.0</span></div>
+                        <input type="range" id="brightness" min="0.0" max="2.0" step="0.01" value="1.0" title="Image brightness adjustment (1.0 = original)">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-row"><label>Contrast</label><span id="contrast_val" class="value-display">1.0</span></div>
+                        <input type="range" id="contrast" min="0.0" max="2.0" step="0.01" value="1.0" title="Image contrast adjustment (1.0 = original)">
+                    </div>
+                </div>
                 <div class="control-item" style="margin-top: 8px;">
                     <div class="control-row"><label>Edge Border Margin</label><span id="edge_border_margin_val" class="value-display">5</span></div>
                     <input type="range" id="edge_border_margin" min="0" max="50" value="5" title="Pixels to ignore from image borders (prevents detecting image edges as lines)">
@@ -661,7 +671,7 @@
 
         // Settings Map
         const settings = [
-            'scale', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method',
+            'scale', 'brightness', 'contrast', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method',
             'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin',
             'hatch1_thresh', 'hatch1_angle', 
             'hatch2_thresh', 'hatch2_angle', 
