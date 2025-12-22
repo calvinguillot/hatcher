@@ -35,16 +35,173 @@ def apply_wobble(x, y, amount=1.0):
     """Adds random wobble to a point."""
     return x + random.uniform(-amount, amount), y + random.uniform(-amount, amount)
 
-def smooth_path_segment(points, smoothing=0.0):
+def chaikin_smoothing(points, iterations=2, ratio=0.25):
     """
-    Smooths a path segment using Bezier curve interpolation.
+    Chaikin's corner cutting algorithm for smooth curve generation.
+    
+    Args:
+        points: List of (x, y) tuples
+        iterations: Number of subdivision iterations (more = smoother)
+        ratio: Cutting ratio (typically 0.25)
+    
+    Returns:
+        List of smoothed (x, y) tuples
+    """
+    if len(points) < 2:
+        return points
+    
+    result = list(points)
+    
+    for _ in range(iterations):
+        new_points = [result[0]]  # Keep first point
+        for i in range(len(result) - 1):
+            p1 = result[i]
+            p2 = result[i + 1]
+            
+            # Create two new points between p1 and p2
+            q1_x = p1[0] * (1 - ratio) + p2[0] * ratio
+            q1_y = p1[1] * (1 - ratio) + p2[1] * ratio
+            q2_x = p1[0] * ratio + p2[0] * (1 - ratio)
+            q2_y = p1[1] * ratio + p2[1] * (1 - ratio)
+            
+            new_points.append((q1_x, q1_y))
+            new_points.append((q2_x, q2_y))
+        
+        new_points.append(result[-1])  # Keep last point
+        result = new_points
+    
+    return result
+
+def hermite_interpolation(points, smoothing=0.5):
+    """
+    Hermite interpolation with tangent vectors for smooth curves.
+    
+    Args:
+        points: List of (x, y) tuples
+        smoothing: Tension parameter (0-1, higher = smoother)
+    
+    Returns:
+        List of interpolated (x, y) tuples
+    """
+    if len(points) < 2:
+        return points
+    
+    if len(points) == 2:
+        return points
+    
+    # Calculate tangents at each point
+    tangents = []
+    for i in range(len(points)):
+        if i == 0:
+            # First point: tangent towards next point
+            dx = points[1][0] - points[0][0]
+            dy = points[1][1] - points[0][1]
+        elif i == len(points) - 1:
+            # Last point: tangent from previous point
+            dx = points[i][0] - points[i-1][0]
+            dy = points[i][1] - points[i-1][1]
+        else:
+            # Intermediate: average of forward and backward differences
+            dx1 = points[i+1][0] - points[i][0]
+            dy1 = points[i+1][1] - points[i][1]
+            dx2 = points[i][0] - points[i-1][0]
+            dy2 = points[i][1] - points[i-1][1]
+            dx = (dx1 + dx2) / 2
+            dy = (dy1 + dy2) / 2
+        
+        # Normalize and scale tangents
+        length = math.sqrt(dx*dx + dy*dy)
+        if length > 0:
+            # Normalize and apply smoothing factor (controls tension)
+            scale = smoothing * 0.5  # Scale factor for tangent magnitude
+            dx = dx * scale
+            dy = dy * scale
+        else:
+            dx = 0
+            dy = 0
+        
+        tangents.append((dx, dy))
+    
+    # Generate interpolated points using Hermite basis functions
+    interpolated = [points[0]]
+    num_segments = max(3, int(len(points) * 2))
+    
+    for i in range(len(points) - 1):
+        p0 = points[i]
+        p1 = points[i + 1]
+        m0 = tangents[i]
+        m1 = tangents[i + 1]
+        
+        # Generate points along this segment
+        segment_points = max(2, num_segments // (len(points) - 1))
+        for j in range(1, segment_points):
+            t = j / segment_points
+            
+            # Hermite basis functions
+            h00 = 2*t*t*t - 3*t*t + 1
+            h10 = t*t*t - 2*t*t + t
+            h01 = -2*t*t*t + 3*t*t
+            h11 = t*t*t - t*t
+            
+            x = h00 * p0[0] + h10 * m0[0] + h01 * p1[0] + h11 * m1[0]
+            y = h00 * p0[1] + h10 * m0[1] + h01 * p1[1] + h11 * m1[1]
+            
+            interpolated.append((x, y))
+    
+    interpolated.append(points[-1])
+    return interpolated
+
+def sliding_average_smoothing(points, window_size=3):
+    """
+    Sliding average (moving average) filter for smoothing.
+    
+    Args:
+        points: List of (x, y) tuples
+        window_size: Size of the averaging window (must be odd)
+    
+    Returns:
+        List of smoothed (x, y) tuples
+    """
+    if len(points) < 2:
+        return points
+    
+    if window_size < 3:
+        window_size = 3
+    if window_size % 2 == 0:
+        window_size += 1
+    
+    half_window = window_size // 2
+    smoothed = []
+    
+    for i in range(len(points)):
+        # Collect points in window
+        window_points = []
+        for j in range(-half_window, half_window + 1):
+            idx = max(0, min(len(points) - 1, i + j))
+            window_points.append(points[idx])
+        
+        # Calculate average
+        avg_x = sum(p[0] for p in window_points) / len(window_points)
+        avg_y = sum(p[1] for p in window_points) / len(window_points)
+        smoothed.append((avg_x, avg_y))
+    
+    return smoothed
+
+def smooth_path_segment(points, smoothing=0.0, method='bezier'):
+    """
+    Smooths a path segment using various interpolation methods.
     
     Args:
         points: List of (x, y) tuples representing the path
         smoothing: Float between 0 and 1
             - 0: No smoothing (original path with line segments)
-            - 1: Straight line from start to end
-            - 0-1: Smooth curve interpolation between original and straight line
+            - 1: Maximum smoothing
+            - 0-1: Smooth curve interpolation
+        method: Interpolation method
+            - 'bezier': Bezier curve interpolation (original)
+            - 'chaikin': Chaikin's corner cutting algorithm
+            - 'hermite': Hermite interpolation with tangents
+            - 'sliding': Sliding average smoothing
     
     Returns:
         SVG path data string with smooth curves
@@ -59,6 +216,96 @@ def smooth_path_segment(points, smoothing=0.0):
             path_data += f" L{x:.1f},{y:.1f}"
         return path_data
     
+    # Apply method-specific smoothing
+    if method == 'chaikin':
+        # Chaikin's algorithm: iterations based on smoothing
+        iterations = max(1, int(smoothing * 4))
+        smoothed_points = chaikin_smoothing(points, iterations=iterations, ratio=0.25)
+        
+        # If smoothing is 1.0, also blend towards straight line
+        if smoothing >= 0.9:
+            start = points[0]
+            end = points[-1]
+            blend_factor = (smoothing - 0.9) * 10  # 0-1 range for 0.9-1.0 smoothing
+            final_points = []
+            for i, point in enumerate(smoothed_points):
+                t = i / (len(smoothed_points) - 1) if len(smoothed_points) > 1 else 0
+                line_x = start[0] * (1 - t) + end[0] * t
+                line_y = start[1] * (1 - t) + end[1] * t
+                final_x = point[0] * (1 - blend_factor) + line_x * blend_factor
+                final_y = point[1] * (1 - blend_factor) + line_y * blend_factor
+                final_points.append((final_x, final_y))
+            smoothed_points = final_points
+        
+        # Convert to SVG path
+        path_data = f"M{smoothed_points[0][0]:.1f},{smoothed_points[0][1]:.1f}"
+        for x, y in smoothed_points[1:]:
+            path_data += f" L{x:.1f},{y:.1f}"
+        return path_data
+    
+    elif method == 'hermite':
+        # Hermite interpolation: smoothing controls tension
+        tension = smoothing * 0.5  # Scale for better control
+        smoothed_points = hermite_interpolation(points, smoothing=tension)
+        
+        # If smoothing is 1.0, blend towards straight line
+        if smoothing >= 0.9:
+            start = points[0]
+            end = points[-1]
+            blend_factor = (smoothing - 0.9) * 10
+            final_points = []
+            for i, point in enumerate(smoothed_points):
+                t = i / (len(smoothed_points) - 1) if len(smoothed_points) > 1 else 0
+                line_x = start[0] * (1 - t) + end[0] * t
+                line_y = start[1] * (1 - t) + end[1] * t
+                final_x = point[0] * (1 - blend_factor) + line_x * blend_factor
+                final_y = point[1] * (1 - blend_factor) + line_y * blend_factor
+                final_points.append((final_x, final_y))
+            smoothed_points = final_points
+        
+        # Convert to SVG path with smooth curves
+        path_data = f"M{smoothed_points[0][0]:.1f},{smoothed_points[0][1]:.1f}"
+        for i in range(1, len(smoothed_points)):
+            if i == 1 or i == len(smoothed_points) - 1:
+                path_data += f" L{smoothed_points[i][0]:.1f},{smoothed_points[i][1]:.1f}"
+            else:
+                # Use quadratic Bezier for smooth transitions
+                prev = smoothed_points[i-1]
+                curr = smoothed_points[i]
+                next_p = smoothed_points[i+1] if i < len(smoothed_points) - 1 else curr
+                # Control point is midpoint
+                cp_x = (curr[0] + next_p[0]) / 2
+                cp_y = (curr[1] + next_p[1]) / 2
+                path_data += f" Q{cp_x:.1f},{cp_y:.1f} {curr[0]:.1f},{curr[1]:.1f}"
+        return path_data
+    
+    elif method == 'sliding':
+        # Sliding average: window size based on smoothing
+        window_size = max(3, min(15, int(3 + smoothing * 12)))
+        smoothed_points = sliding_average_smoothing(points, window_size=window_size)
+        
+        # If smoothing is 1.0, blend towards straight line
+        if smoothing >= 0.9:
+            start = points[0]
+            end = points[-1]
+            blend_factor = (smoothing - 0.9) * 10
+            final_points = []
+            for i, point in enumerate(smoothed_points):
+                t = i / (len(smoothed_points) - 1) if len(smoothed_points) > 1 else 0
+                line_x = start[0] * (1 - t) + end[0] * t
+                line_y = start[1] * (1 - t) + end[1] * t
+                final_x = point[0] * (1 - blend_factor) + line_x * blend_factor
+                final_y = point[1] * (1 - blend_factor) + line_y * blend_factor
+                final_points.append((final_x, final_y))
+            smoothed_points = final_points
+        
+        # Convert to SVG path
+        path_data = f"M{smoothed_points[0][0]:.1f},{smoothed_points[0][1]:.1f}"
+        for x, y in smoothed_points[1:]:
+            path_data += f" L{x:.1f},{y:.1f}"
+        return path_data
+    
+    # Default: Bezier method (original implementation)
     if smoothing == 1.0:
         # Maximum smoothing - straight line from start to end
         start = points[0]
@@ -426,7 +673,7 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
         
     return group
 
-def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, min_len=10, algo='default', smoothing=0.0):
+def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, min_len=10, algo='default', smoothing=0.0, smooth_method='bezier'):
     """
     Finds edges and traces them with short strokes.
     Supports filtering by minimum segment length.
@@ -537,7 +784,7 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
                 # Or just number of points for simplicity
                 if len(segment) * 2 > min_len:
                      # Apply smoothing to the segment
-                     path_data = smooth_path_segment(segment, smoothing=smoothing)
+                     path_data = smooth_path_segment(segment, smoothing=smoothing, method=smooth_method)
                      if path_data:  # Only add if path data is not empty
                          group.add(dwg.path(d=path_data))
 
