@@ -590,7 +590,7 @@ def hed_edge_detection(img_gray, model_path=None):
         print(f"Error in HED edge detection: {e}. Falling back to Sobel.")
         return sobel_edge_detection(img_gray)
 
-def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black'):
+def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black', min_len=0, smoothing=0.0, smooth_method='bezier'):
     """
     Generates hatching lines at a specific angle for pixels darker than threshold.
     """
@@ -651,23 +651,68 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
                     else:
                         # Too bright, cut the line
                         if len(current_segment) > 1:
-                            path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
-                            group.add(dwg.path(d=path_data))
+                            # Calculate approximate length
+                            segment_len = 0
+                            for i in range(len(current_segment) - 1):
+                                dx = current_segment[i+1][0] - current_segment[i][0]
+                                dy = current_segment[i+1][1] - current_segment[i][1]
+                                segment_len += math.sqrt(dx*dx + dy*dy)
+                            
+                            # Filter by min length
+                            if segment_len >= min_len:
+                                # Apply smoothing if enabled
+                                if smoothing > 0.0:
+                                    path_data = smooth_path_segment(current_segment, smoothing=smoothing, method=smooth_method)
+                                else:
+                                    path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
+                                
+                                if path_data:
+                                    group.add(dwg.path(d=path_data))
                         current_segment = []
                 except IndexError:
                     pass
             else:
                  if len(current_segment) > 1:
-                    path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
-                    group.add(dwg.path(d=path_data))
+                    # Calculate approximate length
+                    segment_len = 0
+                    for i in range(len(current_segment) - 1):
+                        dx = current_segment[i+1][0] - current_segment[i][0]
+                        dy = current_segment[i+1][1] - current_segment[i][1]
+                        segment_len += math.sqrt(dx*dx + dy*dy)
+                    
+                    # Filter by min length
+                    if segment_len >= min_len:
+                        # Apply smoothing if enabled
+                        if smoothing > 0.0:
+                            path_data = smooth_path_segment(current_segment, smoothing=smoothing, method=smooth_method)
+                        else:
+                            path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
+                        
+                        if path_data:
+                            group.add(dwg.path(d=path_data))
                  current_segment = []
             
             current_rx += sample_step
             
         # Finish line
         if len(current_segment) > 1:
-            path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
-            group.add(dwg.path(d=path_data))
+            # Calculate approximate length
+            segment_len = 0
+            for i in range(len(current_segment) - 1):
+                dx = current_segment[i+1][0] - current_segment[i][0]
+                dy = current_segment[i+1][1] - current_segment[i][1]
+                segment_len += math.sqrt(dx*dx + dy*dy)
+            
+            # Filter by min length
+            if segment_len >= min_len:
+                # Apply smoothing if enabled
+                if smoothing > 0.0:
+                    path_data = smooth_path_segment(current_segment, smoothing=smoothing, method=smooth_method)
+                else:
+                    path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
+                
+                if path_data:
+                    group.add(dwg.path(d=path_data))
             
         current_ry += y_step
         

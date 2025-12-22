@@ -6,14 +6,20 @@
     <title>Hatching Stylizer v0.2</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
-            --border-color: #333;
-            --text-color: #e0e0e0;
-            --text-muted: #aaa;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-            --success-color: #3b82f6;
+            --bg-color: #0a0a0a;
+            --panel-bg: #151515;
+            --panel-bg-hover: #1a1a1a;
+            --border-color: #2a2a2a;
+            --border-color-hover: #3a3a3a;
+            --text-color: #e8e8e8;
+            --text-muted: #999;
+            --accent-color: #4a9eff;
+            --accent-hover: #5baaff;
+            --accent-glow: rgba(74, 158, 255, 0.3);
+            --success-color: #10b981;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -42,36 +48,50 @@
 
         /* Sidebar & Controls */
         .sidebar {
-            background: var(--panel-bg);
-            padding: 12px;
-            border-radius: 8px;
+            background: linear-gradient(180deg, var(--panel-bg) 0%, #131313 100%);
+            padding: 16px;
+            border-radius: 12px;
             border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
             overflow-y: auto;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
             min-width: 0;
         }
 
         .sidebar::-webkit-scrollbar { width: 8px; }
-        .sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { 
+            background: var(--border-color); 
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: var(--border-color-hover); }
 
         h1 { 
-            margin: 0; font-size: 1.1rem; 
+            margin: 0; 
+            font-size: 1.2rem; 
+            font-weight: 600;
             color: var(--accent-color);
             text-align: center;
+            text-shadow: 0 0 10px var(--accent-glow);
+            padding: 8px 0;
+            letter-spacing: 0.5px;
         }
 
         h3 {
             margin: 0;
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-color);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 2px;
-            margin-top: 5px;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 6px;
+            margin-top: 8px;
+            margin-bottom: 4px;
         }
 
         /* Compact Layout Helpers */
@@ -82,6 +102,13 @@
             margin-bottom: 2px;
         }
 
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-color);
+        }
+
         label {
             font-size: 0.75rem;
             color: var(--text-color);
@@ -89,53 +116,88 @@
 
         .value-display {
             font-size: 0.7rem;
-            color: #60a5fa;
+            color: var(--accent-color);
             font-family: monospace;
+            font-weight: 600;
+            text-shadow: 0 0 4px var(--accent-glow);
         }
 
         input[type="range"] {
             width: 100%;
-            height: 4px;
-            background: #444;
-            border-radius: 2px;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
             appearance: none;
             outline: none;
-            margin: 4px 0;
+            margin: 6px 0;
             display: block;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]:hover {
+            background: var(--border-color-hover);
         }
 
         input[type="range"]::-webkit-slider-thumb {
             appearance: none;
-            width: 12px;
-            height: 12px;
-            background: var(--accent-color);
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
             border-radius: 50%;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 8px var(--accent-glow);
         }
 
-        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type="range"]::-webkit-slider-thumb:hover { 
+            transform: scale(1.3);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 12px var(--accent-glow);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.1);
+        }
 
         input[type="file"] {
             width: 100%;
             font-size: 0.75rem;
-            color: var(--text-muted);
-            background: #2a2a2a;
-            padding: 4px;
-            border-radius: 4px;
+            color: var(--text-color);
+            background: var(--panel-bg);
+            padding: 8px;
+            border-radius: 6px;
             border: 1px solid var(--border-color);
             box-sizing: border-box;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        input[type="file"]:hover {
+            background: var(--panel-bg-hover);
+            border-color: var(--border-color-hover);
         }
 
         select {
             width: 100%; 
-            background: #2a2a2a; 
-            color: #ccc; 
-            border: 1px solid #333; 
-            padding: 3px; 
-            border-radius: 4px;
+            background: var(--panel-bg); 
+            color: var(--text-color); 
+            border: 1px solid var(--border-color); 
+            padding: 8px; 
+            border-radius: 6px;
             font-size: 0.8rem;
             box-sizing: border-box;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        select:hover {
+            background: var(--panel-bg-hover);
+            border-color: var(--border-color-hover);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px var(--accent-glow);
         }
         
         /* Grid for controls */
@@ -151,15 +213,16 @@
 
         /* Main Content */
         .main-content {
-            background: var(--panel-bg);
-            border-radius: 8px;
+            background: linear-gradient(180deg, var(--panel-bg) 0%, #131313 100%);
+            border-radius: 12px;
             border: 1px solid var(--border-color);
-            padding: 10px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative;
             min-width: 0;
+            box-shadow: var(--shadow-lg);
         }
 
         .views-grid {
@@ -171,21 +234,31 @@
         }
 
         .view-panel {
-            background: #151515;
+            background: var(--panel-bg);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .view-panel:hover {
+            border-color: var(--border-color-hover);
+            box-shadow: var(--shadow-md);
         }
 
         .view-header {
-            background: #252525;
-            padding: 4px 8px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            background: linear-gradient(180deg, #1a1a1a 0%, var(--panel-bg) 100%);
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-color);
             border-bottom: 1px solid var(--border-color);
             text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .view-content {
@@ -229,21 +302,40 @@
         }
 
         button {
-            background: var(--accent-color);
-            color: #000;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            color: #fff;
             border: none;
-            padding: 8px;
-            border-radius: 4px;
+            padding: 10px 16px;
+            border-radius: 6px;
             cursor: pointer;
             width: 100%;
             font-weight: 600;
             font-size: 0.9rem;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        button:hover { background: var(--accent-hover); }
-        button#downloadBtn { background: var(--accent-hover); }
-        button#downloadBtn:hover { background: var(--accent-color); }
+        button:hover { 
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
+            box-shadow: var(--shadow-md), 0 0 12px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+
+        button#downloadBtn { 
+            background: linear-gradient(135deg, var(--success-color), #12c982);
+        }
+        button#downloadBtn:hover { 
+            background: linear-gradient(135deg, #12c982, var(--success-color));
+            box-shadow: var(--shadow-md), 0 0 12px rgba(16, 185, 129, 0.3);
+        }
 
         /* Modal Progress */
         .modal-overlay {
@@ -315,22 +407,11 @@
             <div class="grid-2">
                 <div class="control-item">
                     <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">0.5</span></div>
-                    <input type="range" id="scale" min="0.1" max="1.5" step="0.1" value="0.5">
+                    <input type="range" id="scale" min="0.1" max="1.5" step="0.01" value="0.5">
                 </div>
                 <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; height: 100%;">
                     <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
                     <input type="checkbox" id="hatch_enabled" checked>
-                </div>
-            </div>
-            
-            <div class="grid-2">
-                <div class="control-item">
-                    <div class="control-row"><label>Hatch Width</label><span id="hatch_stroke_val" class="value-display">0.5</span></div>
-                    <input type="range" id="hatch_stroke" min="0.1" max="3.0" step="0.1" value="0.5">
-                </div>
-                <div class="control-item">
-                    <div class="control-row"><label>Spacing</label><span id="hatch_spacing_val" class="value-display">5.0</span></div>
-                    <input type="range" id="hatch_spacing" min="1.0" max="20.0" step="0.5" value="5.0">
                 </div>
             </div>
 
@@ -351,7 +432,7 @@
                 </div>
                 <div class="control-item">
                     <div class="control-row"><label>Weight</label><span id="edge_stroke_val" class="value-display">1.0</span></div>
-                    <input type="range" id="edge_stroke" min="0.1" max="3.0" step="0.1" value="1.0">
+                    <input type="range" id="edge_stroke" min="0.1" max="3.0" step="0.01" value="1.0">
                 </div>
             </div>
             <div style="margin-bottom:8px;">
@@ -373,8 +454,37 @@
                 </div>
             </div>
 
-            <!-- Layers -->
-            <h3>Layers (L1 / L2 / L3)</h3>
+            <!-- Hatching -->
+            <h3>Hatching</h3>
+            <div class="grid-2">
+                <div class="control-item">
+                    <div class="control-row"><label>Hatch Width</label><span id="hatch_stroke_val" class="value-display">0.5</span></div>
+                    <input type="range" id="hatch_stroke" min="0.1" max="3.0" step="0.01" value="0.5">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>Spacing</label><span id="hatch_spacing_val" class="value-display">5.0</span></div>
+                    <input type="range" id="hatch_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
+                </div>
+            </div>
+            <div style="margin-bottom:8px;">
+                <select id="hatch_smooth_method">
+                    <option value="bezier">Bezier (Default)</option>
+                    <option value="chaikin">Chaikin</option>
+                    <option value="hermite">Hermite</option>
+                    <option value="sliding">Sliding Average</option>
+                </select>
+            </div>
+            <div class="grid-2">
+                <div class="control-item">
+                    <div class="control-row"><label>Min Length</label><span id="hatch_min_len_val" class="value-display">0</span></div>
+                    <input type="range" id="hatch_min_len" min="0" max="50" value="0">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>Smoothing</label><span id="hatch_smoothing_val" class="value-display">0.0</span></div>
+                    <input type="range" id="hatch_smoothing" min="0.0" max="1.0" step="0.01" value="0.0">
+                </div>
+            </div>
+            <h3 style="margin-top: 8px;">Layers (L1 / L2 / L3)</h3>
             <div class="grid-2">
                 <!-- L1 -->
                 <div class="control-item">
@@ -461,7 +571,7 @@
 
         // Settings Map
         const settings = [
-            'scale', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing',
+            'scale', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method',
             'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method',
             'hatch1_thresh', 'hatch1_angle', 
             'hatch2_thresh', 'hatch2_angle', 

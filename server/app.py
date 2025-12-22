@@ -46,6 +46,9 @@ def process_image():
         hatch_stroke = float(data.get('hatch_stroke', 0.5))
         hatch_spacing = float(data.get('hatch_spacing', 5.0))
         hatch_enabled = data.get('hatch_enabled', True)
+        hatch_min_len = float(data.get('hatch_min_len', 0.0))
+        hatch_smoothing = float(data.get('hatch_smoothing', 0.0))
+        hatch_smooth_method = data.get('hatch_smooth_method', 'bezier')
         
         # Edge settings
         edge_thresh = int(data.get('edge_thresh', 50))
@@ -106,12 +109,16 @@ def process_image():
             
             # Layer 1
             hatch1 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch1_angle, spacing=hatch_spacing, threshold=hatch1_thresh, stroke_width=hatch_stroke)
+                                        angle_deg=hatch1_angle, spacing=hatch_spacing, threshold=hatch1_thresh, 
+                                        stroke_width=hatch_stroke, min_len=hatch_min_len, 
+                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method)
             hatching_group.add(hatch1)
             
             # Layer 2
             hatch2 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch2_angle, spacing=hatch_spacing, threshold=hatch2_thresh, stroke_width=hatch_stroke)
+                                        angle_deg=hatch2_angle, spacing=hatch_spacing, threshold=hatch2_thresh, 
+                                        stroke_width=hatch_stroke, min_len=hatch_min_len, 
+                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method)
             hatching_group.add(hatch2)
             
             # Layer 3
@@ -123,7 +130,9 @@ def process_image():
             # Or just use the setting directly. "control the separion of the lines". Implies direct control.
             # I'll use the raw value.
             hatch3 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch3_angle, spacing=max(1, hatch_spacing * 0.8), threshold=hatch3_thresh, stroke_width=hatch_stroke)
+                                        angle_deg=hatch3_angle, spacing=max(1, hatch_spacing * 0.8), threshold=hatch3_thresh, 
+                                        stroke_width=hatch_stroke, min_len=hatch_min_len, 
+                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method)
             hatching_group.add(hatch3)
             
             dwg.add(hatching_group)
