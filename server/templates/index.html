@@ -81,6 +81,14 @@
             letter-spacing: 0.5px;
         }
 
+        .section-block {
+            background: #0f0f0f;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
         h3 {
             margin: 0;
             font-size: 0.8rem;
@@ -90,8 +98,8 @@
             letter-spacing: 1.5px;
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 6px;
-            margin-top: 8px;
-            margin-bottom: 4px;
+            margin-top: 0;
+            margin-bottom: 8px;
         }
 
         /* Compact Layout Helpers */
@@ -285,11 +293,20 @@
             position: relative;
             transform-origin: 0 0;
             transition: transform 0.1s ease-out;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            min-height: 0;
         }
 
         img, svg {
             max-width: 100%;
             max-height: 100%;
+            width: auto;
+            height: auto;
             object-fit: contain;
             display: block;
         }
@@ -339,27 +356,27 @@
         }
 
         button#resetViewBtn {
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #64748b, #94a3b8);
         }
         button#resetViewBtn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
-            box-shadow: var(--shadow-md), 0 0 12px rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(100, 116, 139, 0.3);
         }
 
         button#exportSettingsBtn {
-            background: linear-gradient(135deg, #06b6d4, #22d3ee);
+            background: linear-gradient(135deg, #0891b2, #06b6d4);
         }
         button#exportSettingsBtn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #22d3ee, #06b6d4);
-            box-shadow: var(--shadow-md), 0 0 12px rgba(6, 182, 212, 0.3);
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(8, 145, 178, 0.3);
         }
 
         button#importSettingsBtn {
-            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            background: linear-gradient(135deg, #6366f1, #818cf8);
         }
         button#importSettingsBtn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            box-shadow: var(--shadow-md), 0 0 12px rgba(245, 158, 11, 0.3);
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(99, 102, 241, 0.3);
         }
 
         button:hover:not(:disabled) { 
@@ -458,20 +475,23 @@
             <input type="file" id="imageInput" accept="image/*">
 
             <!-- Global Settings -->
-            <h3>Global Settings</h3>
-            <div class="grid-2">
-                <div class="control-item">
-                    <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">0.5</span></div>
-                    <input type="range" id="scale" min="0.1" max="1.5" step="0.01" value="0.5">
-                </div>
-                <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; height: 100%;">
-                    <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
-                    <input type="checkbox" id="hatch_enabled" checked>
+            <div class="section-block">
+                <h3>Global Settings</h3>
+                <div class="grid-2">
+                    <div class="control-item">
+                        <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">0.5</span></div>
+                        <input type="range" id="scale" min="0.1" max="1.5" step="0.01" value="0.5">
+                    </div>
+                    <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; height: 100%;">
+                        <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
+                        <input type="checkbox" id="hatch_enabled" checked>
+                    </div>
                 </div>
             </div>
 
             <!-- Edge Detection -->
-            <h3>Edge Detection</h3>
+            <div class="section-block">
+                <h3>Edge Detection</h3>
             <div style="margin-bottom:8px;">
                 <select id="edge_algo">
                     <option value="default">Standard (Gradient)</option>
@@ -508,9 +528,11 @@
                     <input type="range" id="edge_smoothing" min="0.0" max="1.0" step="0.01" value="0.0">
                 </div>
             </div>
+            </div>
 
             <!-- Hatching -->
-            <h3>Hatching</h3>
+            <div class="section-block">
+                <h3>Hatching</h3>
             <div class="grid-2">
                 <div class="control-item">
                     <div class="control-row"><label>Hatch Width</label><span id="hatch_stroke_val" class="value-display">0.5</span></div>
@@ -539,7 +561,10 @@
                     <input type="range" id="hatch_smoothing" min="0.0" max="1.0" step="0.01" value="0.0">
                 </div>
             </div>
-            <h3 style="margin-top: 8px;">Layers (L1 / L2 / L3)</h3>
+            </div>
+
+            <div class="section-block">
+                <h3>Layers (L1 / L2 / L3)</h3>
             <div class="grid-2">
                 <!-- L1 -->
                 <div class="control-item">
@@ -570,6 +595,7 @@
                     <div class="control-row"><label>L3 Angle</label><span id="hatch3_angle_val" class="value-display">90</span></div>
                     <input type="range" id="hatch3_angle" min="0" max="180" value="90">
                 </div>
+            </div>
             </div>
 
             <div class="action-bar">
@@ -682,9 +708,15 @@
                 
                 const img = document.createElement('img');
                 img.src = data.url;
+                // Let CSS handle sizing - don't set width/height to 100% as it breaks aspect ratio
                 const originalInner = document.getElementById('viewOriginalInner');
                 originalInner.innerHTML = '';
                 originalInner.appendChild(img);
+                
+                // Ensure image loads and fits properly
+                img.onload = () => {
+                    // Image will be constrained by CSS max-width/max-height
+                };
                 
                 processImage();
                 
