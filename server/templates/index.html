@@ -299,6 +299,14 @@
             margin-top: auto;
             padding-top: 10px;
             border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .action-bar-row {
+            display: flex;
+            gap: 8px;
         }
 
         button {
@@ -308,31 +316,78 @@
             padding: 10px 16px;
             border-radius: 6px;
             cursor: pointer;
-            width: 100%;
             font-weight: 600;
             font-size: 0.9rem;
-            margin-bottom: 8px;
             transition: all 0.2s;
             box-shadow: var(--shadow-sm);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            flex: 1;
+            min-width: 0;
         }
 
-        button:hover { 
+        button.icon-btn {
+            padding: 10px;
+            font-size: 1.2rem;
+            line-height: 1;
+            flex: 1;
+            min-width: 0;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button#resetViewBtn {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+        }
+        button#resetViewBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(139, 92, 246, 0.3);
+        }
+
+        button#exportSettingsBtn {
+            background: linear-gradient(135deg, #06b6d4, #22d3ee);
+        }
+        button#exportSettingsBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #22d3ee, #06b6d4);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(6, 182, 212, 0.3);
+        }
+
+        button#importSettingsBtn {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+        button#importSettingsBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(245, 158, 11, 0.3);
+        }
+
+        button:hover:not(:disabled) { 
             background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
             box-shadow: var(--shadow-md), 0 0 12px var(--accent-glow);
             transform: translateY(-1px);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--border-color);
+        }
+
+        button:disabled:hover {
+            transform: none;
             box-shadow: var(--shadow-sm);
         }
 
         button#downloadBtn { 
             background: linear-gradient(135deg, var(--success-color), #12c982);
         }
-        button#downloadBtn:hover { 
+        button#downloadBtn:hover:not(:disabled) { 
             background: linear-gradient(135deg, #12c982, var(--success-color));
             box-shadow: var(--shadow-md), 0 0 12px rgba(16, 185, 129, 0.3);
         }
@@ -518,8 +573,13 @@
             </div>
 
             <div class="action-bar">
-                <button id="resetViewBtn">Reset View</button>
-                <button id="downloadBtn" style="display:none;">Download SVG</button>
+                <div class="action-bar-row">
+                    <button id="resetViewBtn" class="icon-btn" title="Reset View">↺</button>
+                    <button id="exportSettingsBtn" class="icon-btn" title="Export Settings">⬇</button>
+                    <button id="importSettingsBtn" class="icon-btn" title="Import Settings">⬆</button>
+                    <input type="file" id="importFileInput" accept=".txt" style="display:none;">
+                </div>
+                <button id="downloadBtn" disabled title="Download SVG">Download SVG</button>
             </div>
         </div>
 
@@ -683,18 +743,25 @@
                 // Original image is already set during upload
                 
                 const dlBtn = document.getElementById('downloadBtn');
-                dlBtn.style.display = 'block';
+                dlBtn.disabled = false;
                 dlBtn.onclick = () => {
-                    const a = document.createElement('a');
-                    a.href = data.url;
-                    a.download = data.download_name;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+                    if (!dlBtn.disabled && data.url) {
+                        const a = document.createElement('a');
+                        a.href = data.url;
+                        a.download = data.download_name;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
                 };
 
             } catch (err) {
                 console.error('Processing failed:', err);
+                // Keep download button disabled on error
+                const dlBtn = document.getElementById('downloadBtn');
+                if (dlBtn) {
+                    dlBtn.disabled = true;
+                }
             } finally {
                 isProcessing = false;
                 
@@ -816,6 +883,77 @@
             }
         });
 
+        // Export settings to file
+        function exportSettings() {
+            const settingsData = {};
+            settings.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.type === 'checkbox') {
+                        settingsData[id] = el.checked;
+                    } else {
+                        settingsData[id] = el.value;
+                    }
+                }
+            });
+
+            // Create filename with date and time
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const filename = `hatcher_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`;
+
+            // Convert to JSON string
+            const jsonString = JSON.stringify(settingsData, null, 2);
+
+            // Create blob and download
+            const blob = new Blob([jsonString], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Import settings from file
+        function importSettings(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const settingsData = JSON.parse(e.target.result);
+                    
+                    // Apply settings
+                    settings.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el && settingsData.hasOwnProperty(id)) {
+                            if (el.type === 'checkbox') {
+                                el.checked = settingsData[id];
+                            } else {
+                                el.value = settingsData[id];
+                            }
+                            // Update display value
+                            updateValue(id, settingsData[id]);
+                        }
+                    });
+
+                    // Trigger processing if image is loaded
+                    if (currentFilename) {
+                        triggerAutoProcess();
+                    }
+                } catch (err) {
+                    alert('Failed to import settings: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
         // Initialize zoom for all views
         document.addEventListener('DOMContentLoaded', () => {
             viewConfigs.forEach(config => {
@@ -826,6 +964,35 @@
             const resetBtn = document.getElementById('resetViewBtn');
             if (resetBtn) {
                 resetBtn.addEventListener('click', resetView);
+            }
+
+            // Export settings button
+            const exportBtn = document.getElementById('exportSettingsBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportSettings);
+            }
+
+            // Import settings button
+            const importBtn = document.getElementById('importSettingsBtn');
+            const importFileInput = document.getElementById('importFileInput');
+            if (importBtn && importFileInput) {
+                importBtn.addEventListener('click', () => {
+                    importFileInput.click();
+                });
+                importFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        importSettings(file);
+                        // Reset input so same file can be selected again
+                        e.target.value = '';
+                    }
+                });
+            }
+
+            // Initialize download button as disabled
+            const dlBtn = document.getElementById('downloadBtn');
+            if (dlBtn) {
+                dlBtn.disabled = true;
             }
         });
     </script>
