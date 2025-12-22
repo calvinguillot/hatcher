@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Double Style - Edge Lines + Cross-Hatching</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      color: #e8e8e8;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 2px;
+      color: #ffd369;
+      text-shadow: 0 2px 10px rgba(255, 211, 105, 0.3);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #888;
+      letter-spacing: 1px;
+    }
+
+    #canvas-container {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas-container svg {
+      display: block;
+    }
+
+    .shortcuts {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      color: #aaa;
+      backdrop-filter: blur(10px);
+    }
+
+    .shortcuts kbd {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      margin: 0 2px;
+    }
+
+    #imageInput {
+      display: none;
+    }
+
+    /* dat.GUI overrides for dark theme */
+    .dg.ac {
+      z-index: 1000 !important;
+    }
+
+    .dg .cr.function:hover,
+    .dg .cr.boolean:hover {
+      background: #2a2a3e !important;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>✏️ Double Style Processor</h1>
+    <p class="subtitle">Edge Detection + Cross-Hatching • Hand-Drawn Look</p>
+  </header>
+
+  <div id="canvas-container"></div>
+
+  <input type="file" id="imageInput" accept="image/*" />
+
+  <div class="shortcuts">
+    <kbd>R</kbd> Redraw &nbsp;|&nbsp;
+    <kbd>Ctrl+S</kbd> Export SVG
+  </div>
+
+  <!-- D3.js for SVG manipulation -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  
+  <!-- dat.GUI for controls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+  
+  <!-- Main sketch -->
+  <script src="sketch_double_style.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hatching Stylizer v0.2</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --text-muted: #aaa;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --success-color: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 10px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* Sidebar & Controls */
+        .sidebar {
+            background: var(--panel-bg);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 8px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+        h1 { 
+            margin: 0; font-size: 1.1rem; 
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        h3 {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2px;
+            margin-top: 5px;
+        }
+
+        /* Compact Layout Helpers */
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .value-display {
+            font-size: 0.7rem;
+            color: #60a5fa;
+            font-family: monospace;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            appearance: none;
+            outline: none;
+            margin: 4px 0;
+            display: block;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        input[type="file"] {
+            width: 100%;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: #2a2a2a;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        select {
+            width: 100%; 
+            background: #2a2a2a; 
+            color: #ccc; 
+            border: 1px solid #333; 
+            padding: 3px; 
+            border-radius: 4px;
+            font-size: 0.8rem;
+            box-sizing: border-box;
+        }
+        
+        /* Grid for controls */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .control-item {
+            margin-bottom: 2px;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: var(--panel-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            min-width: 0;
+        }
+
+        .views-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .view-panel {
+            background: #151515;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .view-header {
+            background: #252525;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .view-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            position: relative;
+            background: #ffffff;
+            cursor: grab;
+        }
+
+        .view-content:active {
+            cursor: grabbing;
+        }
+
+        .view-content.zoomed {
+            cursor: move;
+        }
+
+        .view-inner {
+            position: relative;
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
+        }
+
+        img, svg {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        button {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        button:hover { background: var(--accent-hover); }
+        button#downloadBtn { background: var(--accent-hover); }
+        button#downloadBtn:hover { background: var(--accent-color); }
+
+        /* Modal Progress */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-content {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            min-width: 300px;
+        }
+
+        .modal-text {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+
+        .progress-container {
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 30%;
+            animation: indeterminate 1.5s infinite linear;
+        }
+        
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+
+        /* Layer Visibility */
+        .view-edges #layer-hatching { display: none; }
+        .view-hatching #layer-edges { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Hatching Stylizer v0.2</h1>
+            
+            <input type="file" id="imageInput" accept="image/*">
+
+            <!-- Global Settings -->
+            <h3>Global Settings</h3>
+            <div class="grid-2">
+                <div class="control-item">
+                    <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">0.5</span></div>
+                    <input type="range" id="scale" min="0.1" max="1.5" step="0.1" value="0.5">
+                </div>
+                <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; height: 100%;">
+                    <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
+                    <input type="checkbox" id="hatch_enabled" checked>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="control-item">
+                    <div class="control-row"><label>Hatch Width</label><span id="hatch_stroke_val" class="value-display">0.5</span></div>
+                    <input type="range" id="hatch_stroke" min="0.1" max="3.0" step="0.1" value="0.5">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>Spacing</label><span id="hatch_spacing_val" class="value-display">5.0</span></div>
+                    <input type="range" id="hatch_spacing" min="1.0" max="20.0" step="0.5" value="5.0">
+                </div>
+            </div>
+
+            <!-- Edge Detection -->
+            <h3>Edge Detection</h3>
+            <div style="margin-bottom:8px;">
+                <select id="edge_algo">
+                    <option value="default">Standard (Gradient)</option>
+                    <option value="canny">Canny Approx (Strong)</option>
+                    <option value="sobel">Sobel Operator</option>
+                    <option value="hed">HED (Holistically-Nested)</option>
+                </select>
+            </div>
+            <div class="grid-2">
+                <div class="control-item">
+                    <div class="control-row"><label>Threshold</label><span id="edge_thresh_val" class="value-display">50</span></div>
+                    <input type="range" id="edge_thresh" min="0" max="255" value="50">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>Weight</label><span id="edge_stroke_val" class="value-display">1.0</span></div>
+                    <input type="range" id="edge_stroke" min="0.1" max="3.0" step="0.1" value="1.0">
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="control-item">
+                    <div class="control-row"><label>Min Length</label><span id="edge_min_len_val" class="value-display">10</span></div>
+                    <input type="range" id="edge_min_len" min="0" max="100" value="10">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>Smoothing</label><span id="edge_smoothing_val" class="value-display">0.0</span></div>
+                    <input type="range" id="edge_smoothing" min="0.0" max="1.0" step="0.1" value="0.0">
+                </div>
+            </div>
+
+            <!-- Layers -->
+            <h3>Layers (L1 / L2 / L3)</h3>
+            <div class="grid-2">
+                <!-- L1 -->
+                <div class="control-item">
+                    <div class="control-row"><label>L1 Thresh</label><span id="hatch1_thresh_val" class="value-display">200</span></div>
+                    <input type="range" id="hatch1_thresh" min="0" max="255" value="200">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>L1 Angle</label><span id="hatch1_angle_val" class="value-display">45</span></div>
+                    <input type="range" id="hatch1_angle" min="0" max="180" value="45">
+                </div>
+                
+                <!-- L2 -->
+                <div class="control-item">
+                    <div class="control-row"><label>L2 Thresh</label><span id="hatch2_thresh_val" class="value-display">140</span></div>
+                    <input type="range" id="hatch2_thresh" min="0" max="255" value="140">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>L2 Angle</label><span id="hatch2_angle_val" class="value-display">135</span></div>
+                    <input type="range" id="hatch2_angle" min="0" max="180" value="135">
+                </div>
+
+                <!-- L3 -->
+                <div class="control-item">
+                    <div class="control-row"><label>L3 Thresh</label><span id="hatch3_thresh_val" class="value-display">80</span></div>
+                    <input type="range" id="hatch3_thresh" min="0" max="255" value="80">
+                </div>
+                <div class="control-item">
+                    <div class="control-row"><label>L3 Angle</label><span id="hatch3_angle_val" class="value-display">90</span></div>
+                    <input type="range" id="hatch3_angle" min="0" max="180" value="90">
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button id="resetViewBtn">Reset View</button>
+                <button id="downloadBtn" style="display:none;">Download SVG</button>
+            </div>
+        </div>
+
+        <!-- Modal Progress -->
+        <div class="modal-overlay" id="progressModal">
+            <div class="modal-content">
+                <div class="modal-text">Processing...</div>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="views-grid">
+                <div class="view-panel">
+                    <div class="view-header">Original</div>
+                    <div class="view-content" id="viewOriginal">
+                        <div class="view-inner" id="viewOriginalInner"></div>
+                    </div>
+                </div>
+                <div class="view-panel">
+                    <div class="view-header">Edges</div>
+                    <div class="view-content view-edges" id="viewEdges">
+                        <div class="view-inner" id="viewEdgesInner"></div>
+                    </div>
+                </div>
+                <div class="view-panel">
+                    <div class="view-header">Hatching</div>
+                    <div class="view-content view-hatching" id="viewHatching">
+                        <div class="view-inner" id="viewHatchingInner"></div>
+                    </div>
+                </div>
+                <div class="view-panel">
+                    <div class="view-header">Result</div>
+                    <div class="view-content" id="viewCombined">
+                        <div class="view-inner" id="viewCombinedInner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilename = null;
+        let isProcessing = false;
+        let pendingUpdate = false;
+        let debounceTimer = null;
+
+        // Settings Map
+        const settings = [
+            'scale', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing',
+            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing',
+            'hatch1_thresh', 'hatch1_angle', 
+            'hatch2_thresh', 'hatch2_angle', 
+            'hatch3_thresh', 'hatch3_angle'
+        ];
+
+        // UI Update Helpers
+        function updateValue(id, val) {
+            const display = document.getElementById(id + '_val');
+            if (display) display.textContent = val;
+        }
+
+        // Attach listeners
+        settings.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const eventType = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
+                
+                el.addEventListener(eventType, (e) => {
+                    const val = el.type === 'checkbox' ? el.checked : e.target.value;
+                    updateValue(id, val);
+                    triggerAutoProcess();
+                });
+            }
+        });
+
+        function triggerAutoProcess() {
+            if (!currentFilename) return;
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(processImage, 500);
+        }
+
+        // Upload
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const res = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                currentFilename = data.filename;
+                
+                const img = document.createElement('img');
+                img.src = data.url;
+                const originalInner = document.getElementById('viewOriginalInner');
+                originalInner.innerHTML = '';
+                originalInner.appendChild(img);
+                
+                processImage();
+                
+            } catch (err) {
+                alert('Upload failed: ' + err.message);
+            }
+        });
+
+        async function processImage() {
+            if (isProcessing) {
+                pendingUpdate = true;
+                return;
+            }
+
+            isProcessing = true;
+            document.getElementById('progressModal').classList.add('active');
+
+            const params = { filename: currentFilename };
+            settings.forEach(id => {
+                const el = document.getElementById(id);
+                if (el.type === 'checkbox') {
+                    params[id] = el.checked;
+                } else {
+                    params[id] = el.value;
+                }
+            });
+
+            try {
+                const res = await fetch('/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                const svgRes = await fetch(data.url);
+                const svgText = await svgRes.text();
+                
+                const setContent = (id, innerId, html) => {
+                    const innerEl = document.getElementById(innerId);
+                    innerEl.innerHTML = html;
+                    const svg = innerEl.querySelector('svg');
+                    if (svg) {
+                        svg.setAttribute('width', '100%');
+                        svg.setAttribute('height', '100%');
+                        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    }
+                };
+
+                setContent('viewEdges', 'viewEdgesInner', svgText);
+                setContent('viewHatching', 'viewHatchingInner', svgText);
+                setContent('viewCombined', 'viewCombinedInner', svgText);
+                
+                // Original image is already set during upload
+                
+                const dlBtn = document.getElementById('downloadBtn');
+                dlBtn.style.display = 'block';
+                dlBtn.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = data.url;
+                    a.download = data.download_name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+
+            } catch (err) {
+                console.error('Processing failed:', err);
+            } finally {
+                isProcessing = false;
+                
+                if (pendingUpdate) {
+                    pendingUpdate = false;
+                    processImage();
+                } else {
+                    document.getElementById('progressModal').classList.remove('active');
+                }
+            }
+        }
+
+        // Synchronized zoom state for all views
+        const zoomState = {
+            scale: 1,
+            panX: 0,
+            panY: 0,
+            isDragging: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            dragStartPanX: 0,
+            dragStartPanY: 0,
+            activeView: null
+        };
+
+        const viewConfigs = [
+            { contentId: 'viewOriginal', innerId: 'viewOriginalInner' },
+            { contentId: 'viewEdges', innerId: 'viewEdgesInner' },
+            { contentId: 'viewHatching', innerId: 'viewHatchingInner' },
+            { contentId: 'viewCombined', innerId: 'viewCombinedInner' }
+        ];
+
+        // Update all views with current zoom state
+        function updateAllViews() {
+            viewConfigs.forEach(config => {
+                const viewContent = document.getElementById(config.contentId);
+                const viewInner = document.getElementById(config.innerId);
+                if (!viewContent || !viewInner) return;
+
+                viewInner.style.transform = `translate(${zoomState.panX}px, ${zoomState.panY}px) scale(${zoomState.scale})`;
+                
+                if (zoomState.scale > 1) {
+                    viewContent.classList.add('zoomed');
+                    viewContent.style.cursor = zoomState.isDragging ? 'grabbing' : 'move';
+                } else {
+                    viewContent.classList.remove('zoomed');
+                    viewContent.style.cursor = 'grab';
+                }
+            });
+        }
+
+        // Initialize zoom for a single view
+        function initZoom(viewContentId, viewInnerId) {
+            const viewContent = document.getElementById(viewContentId);
+            const viewInner = document.getElementById(viewInnerId);
+            if (!viewContent || !viewInner) return;
+
+            // Mouse wheel zoom
+            viewContent.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = viewContent.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.max(0.5, Math.min(5, zoomState.scale * zoomFactor));
+
+                // Zoom towards mouse position
+                const scaleChange = newScale / zoomState.scale;
+                zoomState.panX = mouseX - (mouseX - zoomState.panX) * scaleChange;
+                zoomState.panY = mouseY - (mouseY - zoomState.panY) * scaleChange;
+                zoomState.scale = newScale;
+
+                updateAllViews();
+            }, { passive: false });
+
+            // Mouse drag to pan
+            viewContent.addEventListener('mousedown', (e) => {
+                if (zoomState.scale > 1) {
+                    zoomState.isDragging = true;
+                    zoomState.activeView = viewContentId;
+                    zoomState.dragStartX = e.clientX;
+                    zoomState.dragStartY = e.clientY;
+                    zoomState.dragStartPanX = zoomState.panX;
+                    zoomState.dragStartPanY = zoomState.panY;
+                    updateAllViews();
+                }
+            });
+
+            // Double click to reset zoom
+            viewContent.addEventListener('dblclick', () => {
+                resetView();
+            });
+        }
+
+        // Reset all views to default
+        function resetView() {
+            zoomState.scale = 1;
+            zoomState.panX = 0;
+            zoomState.panY = 0;
+            zoomState.isDragging = false;
+            updateAllViews();
+        }
+
+        // Global mouse move/up handlers for panning
+        document.addEventListener('mousemove', (e) => {
+            if (zoomState.isDragging) {
+                zoomState.panX = zoomState.dragStartPanX + (e.clientX - zoomState.dragStartX);
+                zoomState.panY = zoomState.dragStartPanY + (e.clientY - zoomState.dragStartY);
+                updateAllViews();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (zoomState.isDragging) {
+                zoomState.isDragging = false;
+                zoomState.activeView = null;
+                updateAllViews();
+            }
+        });
+
+        // Initialize zoom for all views
+        document.addEventListener('DOMContentLoaded', () => {
+            viewConfigs.forEach(config => {
+                initZoom(config.contentId, config.innerId);
+            });
+
+            // Reset button
+            const resetBtn = document.getElementById('resetViewBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetView);
+            }
+        });
+    </script>
+</body>
+</html>

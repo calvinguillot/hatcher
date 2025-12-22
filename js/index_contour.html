@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contour Map Generator - Pen Plotter Ready</title>
+    
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        min-height: 100vh;
+        color: #e8e8e8;
+        overflow-x: hidden;
+      }
+      
+      .header {
+        padding: 20px 30px;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+      }
+      
+      .header h1 {
+        font-size: 1.5rem;
+        font-weight: 400;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        background: linear-gradient(90deg, #e94560, #ff6b6b, #feca57);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .header p {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 5px;
+        letter-spacing: 0.1em;
+      }
+      
+      #canvas-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+        min-height: calc(100vh - 100px);
+      }
+      
+      #contour-svg {
+        box-shadow: 
+          0 25px 80px rgba(0, 0, 0, 0.5),
+          0 10px 30px rgba(0, 0, 0, 0.3),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      
+      {# #contour-svg:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+          0 30px 90px rgba(0, 0, 0, 0.6),
+          0 15px 40px rgba(0, 0, 0, 0.4),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      } #}
+      
+      /* Hidden file input */
+      #imageInput {
+        display: none;
+      }
+      
+      /* Custom dat.GUI styling */
+      .dg.ac {
+        z-index: 1000 !important;
+      }
+      
+      .dg .cr.function .property-name {
+        width: 100% !important;
+      }
+      
+      .dg .c select {
+        color: #e8e8e8;
+      }
+      
+      /* Loading indicator */
+      .loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.2rem;
+        color: #e94560;
+        letter-spacing: 0.2em;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+      }
+      
+      /* Keyboard shortcuts hint */
+      .shortcuts {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        font-size: 0.65rem;
+        color: #555;
+        letter-spacing: 0.05em;
+      }
+      
+      .shortcuts kbd {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 0 2px;
+      }
+    </style>
+    
+    <!-- D3.js for contour generation -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- dat.GUI for controls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+  </head>
+
+  <body>
+    <div class="header">
+      <h1>Contour Map Generator</h1>
+      <p>Topographic line art from images • Optimized for pen plotters</p>
+    </div>
+    
+    <input type="file" id="imageInput" accept="image/*">
+    
+    <div id="canvas-container">
+      <div class="loading" id="loading">Loading image...</div>
+    </div>
+    
+    <div class="shortcuts">
+      <kbd>R</kbd> Redraw &nbsp;|&nbsp; <kbd>Ctrl+S</kbd> Export SVG
+    </div>
+
+    <script src="sketch_contour_opus.js"></script>
+    
+    <script>
+      // Hide loading indicator once content is ready
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          const loading = document.getElementById('loading');
+          if (loading) loading.style.display = 'none';
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
+
