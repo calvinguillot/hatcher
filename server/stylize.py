@@ -784,7 +784,7 @@ def yolo_segmentation(img, model_path=None, conf=0.25, return_mask=False):
             return fallback_edges, empty_mask
         return fallback_edges
 
-def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black', min_len=0, smoothing=0.0, smooth_method='bezier'):
+def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black', min_len=0, smoothing=0.0, smooth_method='bezier', join_ends_radius=0.0):
     """
     Generates hatching lines at a specific angle for pixels darker than threshold.
     """
@@ -813,6 +813,7 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
     
     # Group for this layer
     group = dwg.g(stroke=color, stroke_width=stroke_width, fill='none', stroke_linecap='round')
+    segments = []
     
     # Step through lines
     y_step = spacing
@@ -854,14 +855,7 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
                             
                             # Filter by min length
                             if segment_len >= min_len:
-                                # Apply smoothing if enabled
-                                if smoothing > 0.0:
-                                    path_data = smooth_path_segment(current_segment, smoothing=smoothing, method=smooth_method)
-                                else:
-                                    path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
-                                
-                                if path_data:
-                                    group.add(dwg.path(d=path_data))
+                                segments.append(current_segment)
                         current_segment = []
                 except IndexError:
                     pass
@@ -883,7 +877,7 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
                             path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
                         
                         if path_data:
-                            group.add(dwg.path(d=path_data))
+                            segments.append(current_segment)
                  current_segment = []
             
             current_rx += sample_step
@@ -899,17 +893,94 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
             
             # Filter by min length
             if segment_len >= min_len:
-                # Apply smoothing if enabled
-                if smoothing > 0.0:
-                    path_data = smooth_path_segment(current_segment, smoothing=smoothing, method=smooth_method)
-                else:
-                    path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
-                
-                if path_data:
-                    group.add(dwg.path(d=path_data))
+                segments.append(current_segment)
             
         current_ry += y_step
-        
+
+    def _dist(p1, p2):
+        dx = p1[0] - p2[0]
+        dy = p1[1] - p2[1]
+        return math.hypot(dx, dy)
+
+    def join_segments_grid(seg_list, radius):
+        """
+        Spatially accelerated join: bucket endpoints into a grid (cell = radius),
+        and greedily merge segments whose closest endpoints are within radius.
+        Each merge may reverse one segment to connect the nearest ends.
+        Rebuilds the grid after each merge to keep it simple and robust.
+        """
+        if radius <= 0 or len(seg_list) < 2:
+            return seg_list
+
+        cell = max(radius, 1e-6)
+
+        def build_grid(segs):
+            grid = {}
+            for idx, seg in enumerate(segs):
+                for pt in (seg[0], seg[-1]):
+                    cx = int(pt[0] // cell)
+                    cy = int(pt[1] // cell)
+                    grid.setdefault((cx, cy), set()).add(idx)
+            return grid
+
+        segments_local = list(seg_list)
+        changed = True
+
+        while changed and len(segments_local) > 1:
+            changed = False
+            grid = build_grid(segments_local)
+
+            for i, seg in enumerate(segments_local):
+                ends = (seg[0], seg[-1])
+                for end in ends:
+                    cx = int(end[0] // cell)
+                    cy = int(end[1] // cell)
+                    candidates = set()
+                    for dx in (-1, 0, 1):
+                        for dy in (-1, 0, 1):
+                            candidates.update(grid.get((cx + dx, cy + dy), ()))
+
+                    # Check candidates
+                    best = None
+                    best_j = None
+                    best_merged = None
+                    for j in candidates:
+                        if j == i:
+                            continue
+                        a = seg
+                        b = segments_local[j]
+                        opts = [
+                            (_dist(a[-1], b[0]), a + b),
+                            (_dist(a[-1], b[-1]), a + list(reversed(b))),
+                            (_dist(a[0], b[0]), list(reversed(b)) + a),
+                            (_dist(a[0], b[-1]), b + a),
+                        ]
+                        dist, merged = min(opts, key=lambda x: x[0])
+                        if dist <= radius and (best is None or dist < best):
+                            best = dist
+                            best_j = j
+                            best_merged = merged
+
+                    if best is not None:
+                        # Merge i and best_j
+                        hi, lo = max(i, best_j), min(i, best_j)
+                        segments_local.pop(hi)
+                        segments_local.pop(lo)
+                        segments_local.append(best_merged)
+                        changed = True
+                        break  # restart after rebuild
+                if changed:
+                    break
+
+        return segments_local
+
+    segments = join_segments_grid(segments, join_ends_radius)
+
+    for segment in segments:
+        path_data = smooth_path_segment(segment, smoothing=smoothing, method=smooth_method)
+        if path_data:
+            group.add(dwg.path(d=path_data))
+
     return group
 
 def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, min_len=10, algo='default', smoothing=0.0, smooth_method='bezier', border_margin=5, join_radius=0):

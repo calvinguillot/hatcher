@@ -570,6 +570,12 @@
                     <input type="range" id="hatch_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
                 </div>
             </div>
+            <div class="grid-2">
+                <div class="control-item">
+                    <div class="control-row"><label>Join Ends</label><span id="hatch_join_ends_val" class="value-display">0</span></div>
+                    <input type="range" id="hatch_join_ends" min="0" max="50" step="1" value="0" title="Join adjacent hatch segments into a single zig-zag path when their endpoints are within this radius (px). 0 disables joining.">
+                </div>
+            </div>
             <div style="margin-bottom:8px;">
                 <select id="hatch_smooth_method">
                     <option value="bezier">Bezier (Default)</option>
@@ -684,7 +690,7 @@
 
         // Settings Map
         const settings = [
-            'scale', 'brightness', 'contrast', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method',
+            'scale', 'brightness', 'contrast', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
             'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
             'hatch1_thresh', 'hatch1_angle', 
             'hatch2_thresh', 'hatch2_angle', 

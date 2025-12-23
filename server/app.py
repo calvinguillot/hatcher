@@ -52,6 +52,7 @@ def process_image():
         hatch_min_len = float(data.get('hatch_min_len', 0.0))
         hatch_smoothing = float(data.get('hatch_smoothing', 0.0))
         hatch_smooth_method = data.get('hatch_smooth_method', 'bezier')
+        hatch_join_ends = float(data.get('hatch_join_ends', 0.0))
         
         # Edge settings
         edge_thresh = int(data.get('edge_thresh', 50))
@@ -158,14 +159,16 @@ def process_image():
             hatch1 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
                                         angle_deg=hatch1_angle, spacing=hatch_spacing, threshold=hatch1_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
-                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method)
+                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
+                                        join_ends_radius=hatch_join_ends)
             hatching_group.add(hatch1)
             
             # Layer 2
             hatch2 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
                                         angle_deg=hatch2_angle, spacing=hatch_spacing, threshold=hatch2_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
-                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method)
+                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
+                                        join_ends_radius=hatch_join_ends)
             hatching_group.add(hatch2)
             
             # Layer 3
@@ -179,7 +182,8 @@ def process_image():
             hatch3 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
                                         angle_deg=hatch3_angle, spacing=max(1, hatch_spacing * 0.8), threshold=hatch3_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
-                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method)
+                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
+                                        join_ends_radius=hatch_join_ends)
             hatching_group.add(hatch3)
             
             dwg.add(hatching_group)
