@@ -541,6 +541,12 @@
             </div>
             <div class="grid-2">
                 <div class="control-item">
+                    <div class="control-row"><label>Join Radius</label><span id="edge_join_radius_val" class="value-display">5</span></div>
+                    <input type="range" id="edge_join_radius" min="0" max="50" step="1" value="5" title="Join nearby edge paths if their endpoints are within this radius (px). Set to 0 to disable.">
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="control-item">
                     <div class="control-row"><label>Min Length</label><span id="edge_min_len_val" class="value-display">10</span></div>
                     <input type="range" id="edge_min_len" min="0" max="100" value="10">
                 </div>
@@ -679,7 +685,7 @@
         // Settings Map
         const settings = [
             'scale', 'brightness', 'contrast', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method',
-            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'yolo_show_preview',
+            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
             'hatch1_thresh', 'hatch1_angle', 
             'hatch2_thresh', 'hatch2_angle', 
             'hatch3_thresh', 'hatch3_angle'

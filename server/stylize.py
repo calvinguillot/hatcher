@@ -912,7 +912,7 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
         
     return group
 
-def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, min_len=10, algo='default', smoothing=0.0, smooth_method='bezier', border_margin=5):
+def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, min_len=10, algo='default', smoothing=0.0, smooth_method='bezier', border_margin=5, join_radius=0):
     """
     Finds edges and traces them with short strokes.
     Supports filtering by minimum segment length.
@@ -925,6 +925,7 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
     
     Args:
         border_margin: Pixels to ignore from each border (prevents detecting image borders as edges)
+        join_radius: Distance in pixels to join endpoints of nearby paths (0 disables joining)
     """
     edges = None
     
@@ -961,7 +962,8 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
         edges = ImageOps.autocontrast(edges)
     
     group = dwg.g(stroke='black', stroke_width=stroke_width, fill='none')
-    
+    segments = []
+
     # Simple greedy tracer with min length filtering
     visited = set()
     pixels = edges.load()
@@ -1036,10 +1038,57 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
                 # Estimate length by number of points * step approx
                 # Or just number of points for simplicity
                 if len(segment) * 2 > min_len:
-                     # Apply smoothing to the segment
-                     path_data = smooth_path_segment(segment, smoothing=smoothing, method=smooth_method)
-                     if path_data:  # Only add if path data is not empty
-                         group.add(dwg.path(d=path_data))
+                    segments.append(segment)
+
+    def _dist(p1, p2):
+        dx = p1[0] - p2[0]
+        dy = p1[1] - p2[1]
+        return math.hypot(dx, dy)
+
+    def join_segments(seg_list, radius):
+        if radius <= 0 or len(seg_list) < 2:
+            return seg_list
+        joined = list(seg_list)
+        changed = True
+        while changed and len(joined) > 1:
+            changed = False
+            for i in range(len(joined)):
+                if changed:
+                    break
+                for j in range(i + 1, len(joined)):
+                    a = joined[i]
+                    b = joined[j]
+
+                    options = [
+                        (_dist(a[-1], b[0]), 'a_end_b_start'),
+                        (_dist(a[-1], b[-1]), 'a_end_b_end'),
+                        (_dist(a[0], b[0]), 'a_start_b_start'),
+                        (_dist(a[0], b[-1]), 'a_start_b_end'),
+                    ]
+                    best_dist, key = min(options, key=lambda x: x[0])
+                    if best_dist <= radius:
+                        if key == 'a_end_b_start':
+                            merged = a + b
+                        elif key == 'a_end_b_end':
+                            merged = a + list(reversed(b))
+                        elif key == 'a_start_b_start':
+                            merged = list(reversed(b)) + a
+                        else:  # a_start_b_end
+                            merged = b + a
+                        # Replace two segments with merged
+                        joined.pop(j)
+                        joined.pop(i)
+                        joined.append(merged)
+                        changed = True
+                        break
+        return joined
+
+    segments = join_segments(segments, join_radius)
+
+    for segment in segments:
+        path_data = smooth_path_segment(segment, smoothing=smoothing, method=smooth_method)
+        if path_data:
+            group.add(dwg.path(d=path_data))
 
     return group
 
