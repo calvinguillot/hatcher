@@ -784,25 +784,29 @@ def yolo_segmentation(img, model_path=None, conf=0.25, return_mask=False):
             return fallback_edges, empty_mask
         return fallback_edges
 
-def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black', min_len=0, smoothing=0.0, smooth_method='bezier', join_ends_radius=0.0):
+def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black', min_len=0, smoothing=0.0, smooth_method='bezier', join_ends_radius=0.0, angle_randomness=0.0, overshoot=0.0):
     """
     Generates hatching lines at a specific angle for pixels darker than threshold.
+    
+    Args:
+        angle_randomness: Maximum random angle variation in degrees (0-90). Applied per line.
+        overshoot: Maximum random overshoot length in pixels. Applied randomly to segment ends.
     """
     if angle_deg >= 180: angle_deg -= 180
     if angle_deg < 0: angle_deg += 180
 
-    rad = math.radians(angle_deg)
+    base_rad = math.radians(angle_deg)
     
-    # Calculate bounding box to cover the rotation
+    # Calculate bounding box to cover the rotation (using base angle for bounds)
     corners = [(0, 0), (width, 0), (width, height), (0, height)]
     
-    cos_a = math.cos(rad)
-    sin_a = math.sin(rad)
+    cos_a_base = math.cos(base_rad)
+    sin_a_base = math.sin(base_rad)
     
     rotated_corners = []
     for x, y in corners:
-        rx = x * cos_a - y * sin_a
-        ry = x * sin_a + y * cos_a
+        rx = x * cos_a_base - y * sin_a_base
+        ry = x * sin_a_base + y * cos_a_base
         rotated_corners.append((rx, ry))
         
     min_ry = min(p[1] for p in rotated_corners)
@@ -815,6 +819,39 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
     group = dwg.g(stroke=color, stroke_width=stroke_width, fill='none', stroke_linecap='round')
     segments = []
     
+    def apply_overshoot(segment):
+        """Apply random overshoot to a segment if overshoot > 0.
+        Randomly extends the segment end by 0 to overshoot pixels.
+        """
+        if overshoot <= 0 or len(segment) < 2:
+            return segment
+        
+        # Calculate direction from last two points
+        last_point = segment[-1]
+        second_last = segment[-2]
+        dx = last_point[0] - second_last[0]
+        dy = last_point[1] - second_last[1]
+        
+        # Normalize direction
+        length = math.sqrt(dx*dx + dy*dy)
+        if length > 0:
+            dx /= length
+            dy /= length
+            
+            # Random overshoot distance (0 to overshoot)
+            # Sometimes no overshoot (random), sometimes up to max
+            overshoot_dist = random.uniform(0, overshoot)
+            
+            # Extend the last point
+            new_x = last_point[0] + dx * overshoot_dist
+            new_y = last_point[1] + dy * overshoot_dist
+            
+            # Create new segment with overshoot point
+            new_segment = segment + [(new_x, new_y)]
+            return new_segment
+        
+        return segment
+    
     # Step through lines
     y_step = spacing
     current_ry = min_ry
@@ -823,6 +860,20 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
     sample_step = 2.0 
     
     while current_ry <= max_ry:
+        # Apply angle randomness per line
+        if angle_randomness > 0:
+            angle_offset = random.uniform(-angle_randomness, angle_randomness)
+            line_angle_deg = angle_deg + angle_offset
+            # Normalize angle
+            if line_angle_deg >= 180: line_angle_deg -= 180
+            if line_angle_deg < 0: line_angle_deg += 180
+            line_rad = math.radians(line_angle_deg)
+            cos_a = math.cos(line_rad)
+            sin_a = math.sin(line_rad)
+        else:
+            cos_a = cos_a_base
+            sin_a = sin_a_base
+        
         points = []
         current_rx = min_rx
         
@@ -855,7 +906,9 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
                             
                             # Filter by min length
                             if segment_len >= min_len:
-                                segments.append(current_segment)
+                                # Apply overshoot before adding
+                                final_segment = apply_overshoot(current_segment)
+                                segments.append(final_segment)
                         current_segment = []
                 except IndexError:
                     pass
@@ -870,14 +923,9 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
                     
                     # Filter by min length
                     if segment_len >= min_len:
-                        # Apply smoothing if enabled
-                        if smoothing > 0.0:
-                            path_data = smooth_path_segment(current_segment, smoothing=smoothing, method=smooth_method)
-                        else:
-                            path_data = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in current_segment)
-                        
-                        if path_data:
-                            segments.append(current_segment)
+                        # Apply overshoot before adding
+                        final_segment = apply_overshoot(current_segment)
+                        segments.append(final_segment)
                  current_segment = []
             
             current_rx += sample_step
@@ -893,7 +941,9 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
             
             # Filter by min length
             if segment_len >= min_len:
-                segments.append(current_segment)
+                # Apply overshoot before adding
+                final_segment = apply_overshoot(current_segment)
+                segments.append(final_segment)
             
         current_ry += y_step
 

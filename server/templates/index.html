@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hatching Stylizer v0.2</title>
+    <title>Hatcher v0.3</title>
     <style>
         :root {
             --bg-color: #0a0a0a;
@@ -74,7 +74,7 @@
             margin: 0; 
             font-size: 1.2rem; 
             font-weight: 600;
-            color: var(--accent-color);
+            color: var(--text-color);
             text-align: center;
             text-shadow: 0 0 10px var(--accent-glow);
             padding: 8px 0;
@@ -100,6 +100,42 @@
             padding-bottom: 6px;
             margin-top: 0;
             margin-bottom: 8px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: color 0.2s;
+        }
+
+        h3:hover {
+            color: var(--accent-color);
+        }
+
+        h3::after {
+            content: '▼';
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+            color: var(--text-muted);
+        }
+
+        h3.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s;
+            max-height: 2000px;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin: 0;
         }
 
         /* Compact Layout Helpers */
@@ -330,15 +366,13 @@
             background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
             color: #fff;
             border: none;
-            padding: 10px 16px;
+            padding: 8px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-weight: 400;
+            font-size: 0.75rem;
             transition: all 0.2s;
             box-shadow: var(--shadow-sm);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             flex: 1;
             min-width: 0;
         }
@@ -399,6 +433,14 @@
         button:disabled:hover {
             transform: none;
             box-shadow: var(--shadow-sm);
+        }
+
+        button#redrawBtn {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+        }
+        button#redrawBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
+            box-shadow: var(--shadow-md), 0 0 12px var(--accent-glow);
         }
 
         button#downloadBtn { 
@@ -470,22 +512,34 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <h1>Hatching Stylizer v0.2</h1>
-            
-            <input type="file" id="imageInput" accept="image/*">
+            <h1>Hatcher v0.3</h1>
+
+            <!-- Controls -->
+            <div class="section-block">
+                <h3 class="section-header" data-section="controls">Controls</h3>
+                <div class="section-content" data-content="controls">
+                <input type="file" id="imageInput" accept="image/*" style="margin-bottom: 8px;">
+                
+                <div class="action-bar-row" style="margin-bottom: 8px;">
+                    <button id="importSettingsBtn" style="flex: 1;">Import Settings</button>
+                    <button id="exportSettingsBtn" style="flex: 1;">Export Settings</button>
+                </div>
+                <div class="action-bar-row" style="margin-bottom: 8px;">
+                    <button id="redrawBtn" style="flex: 1;">Redraw</button>
+                    <button id="resetViewBtn" style="flex: 1;">Reset View</button>
+                </div>
+                <button id="downloadBtn" disabled style="width: 100%;">Save SVG</button>
+                <input type="file" id="importFileInput" accept=".txt" style="display:none;">
+                </div>
+            </div>
 
             <!-- Global Settings -->
             <div class="section-block">
-                <h3>Global Settings</h3>
-                <div class="grid-2">
-                    <div class="control-item">
-                        <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">0.5</span></div>
-                        <input type="range" id="scale" min="0.1" max="1.5" step="0.05" value="0.5">
-                    </div>
-                    <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; height: 100%;">
-                        <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
-                        <input type="checkbox" id="hatch_enabled" checked>
-                    </div>
+                <h3 class="section-header" data-section="global">Global Settings</h3>
+                <div class="section-content" data-content="global">
+                <div class="control-item">
+                    <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">0.5</span></div>
+                    <input type="range" id="scale" min="0.1" max="1.5" step="0.05" value="0.5">
                 </div>
                 <div class="grid-2" style="margin-top: 8px;">
                     <div class="control-item">
@@ -501,11 +555,17 @@
                     <div class="control-row"><label>Edge Border Margin</label><span id="edge_border_margin_val" class="value-display">5</span></div>
                     <input type="range" id="edge_border_margin" min="0" max="50" value="5" title="Pixels to ignore from image borders (prevents detecting image edges as lines)">
                 </div>
+                <div class="control-item" style="margin-top: 8px;">
+                    <div class="control-row"><label>Stroke Width</label><span id="stroke_width_val" class="value-display">1.0</span></div>
+                    <input type="range" id="stroke_width" min="0.1" max="3.0" step="0.05" value="1.0" title="Line stroke width for both edges and hatching">
+                </div>
+                </div>
             </div>
 
             <!-- Edge Detection -->
             <div class="section-block">
-                <h3>Edge Detection</h3>
+                <h3 class="section-header" data-section="edges">Edge Detection</h3>
+                <div class="section-content" data-content="edges">
             <div style="margin-bottom:8px;">
                 <select id="edge_algo">
                     <option value="default">Standard (Gradient)</option>
@@ -521,15 +581,9 @@
                     <input type="checkbox" id="yolo_show_preview">
                 </div>
             </div>
-            <div class="grid-2">
-                <div class="control-item">
-                    <div class="control-row"><label>Threshold</label><span id="edge_thresh_val" class="value-display">50</span></div>
-                    <input type="range" id="edge_thresh" min="0" max="255" value="50">
-                </div>
-                <div class="control-item">
-                    <div class="control-row"><label>Weight</label><span id="edge_stroke_val" class="value-display">1.0</span></div>
-                    <input type="range" id="edge_stroke" min="0.1" max="3.0" step="0.05" value="1.0">
-                </div>
+            <div class="control-item">
+                <div class="control-row"><label>Threshold</label><span id="edge_thresh_val" class="value-display">50</span></div>
+                <input type="range" id="edge_thresh" min="0" max="255" value="50">
             </div>
             <div style="margin-bottom:8px;">
                 <select id="edge_smooth_method">
@@ -539,11 +593,9 @@
                     <option value="sliding">Sliding Average</option>
                 </select>
             </div>
-            <div class="grid-2">
-                <div class="control-item">
-                    <div class="control-row"><label>Join Radius</label><span id="edge_join_radius_val" class="value-display">5</span></div>
-                    <input type="range" id="edge_join_radius" min="0" max="50" step="1" value="5" title="Join nearby edge paths if their endpoints are within this radius (px). Set to 0 to disable.">
-                </div>
+            <div class="control-item" style="margin-top: 8px;">
+                <div class="control-row"><label>Join Radius</label><span id="edge_join_radius_val" class="value-display">5</span></div>
+                <input type="range" id="edge_join_radius" min="0" max="50" step="1" value="5" title="Join nearby edge paths if their endpoints are within this radius (px). Set to 0 to disable.">
             </div>
             <div class="grid-2">
                 <div class="control-item">
@@ -555,26 +607,24 @@
                     <input type="range" id="edge_smoothing" min="0.0" max="1.0" step="0.05" value="0.0">
                 </div>
             </div>
+                </div>
             </div>
 
             <!-- Hatching -->
             <div class="section-block">
-                <h3>Hatching</h3>
-            <div class="grid-2">
-                <div class="control-item">
-                    <div class="control-row"><label>Hatch Width</label><span id="hatch_stroke_val" class="value-display">0.5</span></div>
-                    <input type="range" id="hatch_stroke" min="0.1" max="3.0" step="0.05" value="0.5">
-                </div>
-                <div class="control-item">
-                    <div class="control-row"><label>Spacing</label><span id="hatch_spacing_val" class="value-display">5.0</span></div>
-                    <input type="range" id="hatch_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
-                </div>
+                <h3 class="section-header" data-section="hatching">Hatching</h3>
+                <div class="section-content" data-content="hatching">
+            <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
+                <input type="checkbox" id="hatch_enabled" checked>
             </div>
-            <div class="grid-2">
-                <div class="control-item">
-                    <div class="control-row"><label>Join Ends</label><span id="hatch_join_ends_val" class="value-display">0</span></div>
-                    <input type="range" id="hatch_join_ends" min="0" max="50" step="1" value="0" title="Join adjacent hatch segments into a single zig-zag path when their endpoints are within this radius (px). 0 disables joining.">
-                </div>
+            <div class="control-item">
+                <div class="control-row"><label>Spacing</label><span id="hatch_spacing_val" class="value-display">5.0</span></div>
+                <input type="range" id="hatch_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
+            </div>
+            <div class="control-item" style="margin-top: 8px;">
+                <div class="control-row"><label>Join Ends</label><span id="hatch_join_ends_val" class="value-display">0</span></div>
+                <input type="range" id="hatch_join_ends" min="0" max="50" step="1" value="0" title="Join adjacent hatch segments into a single zig-zag path when their endpoints are within this radius (px). 0 disables joining.">
             </div>
             <div style="margin-bottom:8px;">
                 <select id="hatch_smooth_method">
@@ -594,51 +644,87 @@
                     <input type="range" id="hatch_smoothing" min="0.0" max="1.0" step="0.05" value="0.0">
                 </div>
             </div>
-            </div>
-
-            <div class="section-block">
-                <h3>Layers (L1 / L2 / L3)</h3>
-            <div class="grid-2">
-                <!-- L1 -->
-                <div class="control-item">
-                    <div class="control-row"><label>L1 Thresh</label><span id="hatch1_thresh_val" class="value-display">200</span></div>
-                    <input type="range" id="hatch1_thresh" min="0" max="255" value="200">
-                </div>
-                <div class="control-item">
-                    <div class="control-row"><label>L1 Angle</label><span id="hatch1_angle_val" class="value-display">45</span></div>
-                    <input type="range" id="hatch1_angle" min="0" max="180" value="45">
+            
+            <!-- Layers Section (inside Hatching) -->
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; font-weight: 600; color: var(--text-color); text-transform: uppercase; letter-spacing: 1px;">Layers</h4>
+                
+                <!-- Layer 1 -->
+                <div style="margin-bottom: 16px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 1</div>
+                    <div class="grid-2">
+                        <div class="control-item">
+                            <div class="control-row"><label>Threshold</label><span id="hatch1_thresh_val" class="value-display">200</span></div>
+                            <input type="range" id="hatch1_thresh" min="0" max="255" value="200">
+                        </div>
+                        <div class="control-item">
+                            <div class="control-row"><label>Angle</label><span id="hatch1_angle_val" class="value-display">45</span></div>
+                            <input type="range" id="hatch1_angle" min="0" max="180" value="45">
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top: 8px;">
+                        <div class="control-item">
+                            <div class="control-row"><label>Angle Rand</label><span id="hatch1_angle_randomness_val" class="value-display">0</span></div>
+                            <input type="range" id="hatch1_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
+                        </div>
+                        <div class="control-item">
+                            <div class="control-row"><label>Overshoot</label><span id="hatch1_overshoot_val" class="value-display">0</span></div>
+                            <input type="range" id="hatch1_overshoot" min="0" max="50" step="0.5" value="0" title="Random overshoot length in pixels">
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- L2 -->
-                <div class="control-item">
-                    <div class="control-row"><label>L2 Thresh</label><span id="hatch2_thresh_val" class="value-display">140</span></div>
-                    <input type="range" id="hatch2_thresh" min="0" max="255" value="140">
+                <!-- Layer 2 -->
+                <div style="margin-bottom: 16px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 2</div>
+                    <div class="grid-2">
+                        <div class="control-item">
+                            <div class="control-row"><label>Threshold</label><span id="hatch2_thresh_val" class="value-display">140</span></div>
+                            <input type="range" id="hatch2_thresh" min="0" max="255" value="140">
+                        </div>
+                        <div class="control-item">
+                            <div class="control-row"><label>Angle</label><span id="hatch2_angle_val" class="value-display">135</span></div>
+                            <input type="range" id="hatch2_angle" min="0" max="180" value="135">
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top: 8px;">
+                        <div class="control-item">
+                            <div class="control-row"><label>Angle Rand</label><span id="hatch2_angle_randomness_val" class="value-display">0</span></div>
+                            <input type="range" id="hatch2_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
+                        </div>
+                        <div class="control-item">
+                            <div class="control-row"><label>Overshoot</label><span id="hatch2_overshoot_val" class="value-display">0</span></div>
+                            <input type="range" id="hatch2_overshoot" min="0" max="50" step="0.5" value="0" title="Random overshoot length in pixels">
+                        </div>
+                    </div>
                 </div>
-                <div class="control-item">
-                    <div class="control-row"><label>L2 Angle</label><span id="hatch2_angle_val" class="value-display">135</span></div>
-                    <input type="range" id="hatch2_angle" min="0" max="180" value="135">
-                </div>
-
-                <!-- L3 -->
-                <div class="control-item">
-                    <div class="control-row"><label>L3 Thresh</label><span id="hatch3_thresh_val" class="value-display">80</span></div>
-                    <input type="range" id="hatch3_thresh" min="0" max="255" value="80">
-                </div>
-                <div class="control-item">
-                    <div class="control-row"><label>L3 Angle</label><span id="hatch3_angle_val" class="value-display">90</span></div>
-                    <input type="range" id="hatch3_angle" min="0" max="180" value="90">
+                
+                <!-- Layer 3 -->
+                <div style="margin-bottom: 8px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 3</div>
+                    <div class="grid-2">
+                        <div class="control-item">
+                            <div class="control-row"><label>Threshold</label><span id="hatch3_thresh_val" class="value-display">80</span></div>
+                            <input type="range" id="hatch3_thresh" min="0" max="255" value="80">
+                        </div>
+                        <div class="control-item">
+                            <div class="control-row"><label>Angle</label><span id="hatch3_angle_val" class="value-display">90</span></div>
+                            <input type="range" id="hatch3_angle" min="0" max="180" value="90">
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-top: 8px;">
+                        <div class="control-item">
+                            <div class="control-row"><label>Angle Rand</label><span id="hatch3_angle_randomness_val" class="value-display">0</span></div>
+                            <input type="range" id="hatch3_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
+                        </div>
+                        <div class="control-item">
+                            <div class="control-row"><label>Overshoot</label><span id="hatch3_overshoot_val" class="value-display">0</span></div>
+                            <input type="range" id="hatch3_overshoot" min="0" max="50" step="0.5" value="0" title="Random overshoot length in pixels">
+                        </div>
+                    </div>
                 </div>
             </div>
-            </div>
-
-            <div class="action-bar">
-                <div class="action-bar-row">
-                    <button id="resetViewBtn" class="icon-btn" title="Reset View">↺</button>
-                    <button id="exportSettingsBtn" class="icon-btn" title="Export Settings">⬇</button>
-                    <button id="importSettingsBtn" class="icon-btn" title="Import Settings">⬆</button>
-                    <input type="file" id="importFileInput" accept=".txt" style="display:none;">
                 </div>
-                <button id="downloadBtn" disabled title="Download SVG">Download SVG</button>
             </div>
         </div>
 
@@ -686,15 +772,14 @@
         let currentFilename = null;
         let isProcessing = false;
         let pendingUpdate = false;
-        let debounceTimer = null;
 
         // Settings Map
         const settings = [
-            'scale', 'brightness', 'contrast', 'hatch_enabled', 'hatch_stroke', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
-            'edge_algo', 'edge_thresh', 'edge_stroke', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
-            'hatch1_thresh', 'hatch1_angle', 
-            'hatch2_thresh', 'hatch2_angle', 
-            'hatch3_thresh', 'hatch3_angle'
+            'scale', 'brightness', 'contrast', 'stroke_width', 'hatch_enabled', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
+            'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
+            'hatch1_thresh', 'hatch1_angle', 'hatch1_angle_randomness', 'hatch1_overshoot',
+            'hatch2_thresh', 'hatch2_angle', 'hatch2_angle_randomness', 'hatch2_overshoot',
+            'hatch3_thresh', 'hatch3_angle', 'hatch3_angle_randomness', 'hatch3_overshoot'
         ];
 
         // UI Update Helpers
@@ -726,20 +811,12 @@
                     if (id === 'edge_algo') {
                         updateYOLOPreviewVisibility();
                     }
-                    
-                    triggerAutoProcess();
                 });
             }
         });
 
         // Initialize YOLO preview visibility
         updateYOLOPreviewVisibility();
-
-        function triggerAutoProcess() {
-            if (!currentFilename) return;
-            if (debounceTimer) clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(processImage, 500);
-        }
 
         // Upload
         document.getElementById('imageInput').addEventListener('change', async (e) => {
@@ -788,12 +865,20 @@
             const params = { filename: currentFilename };
             settings.forEach(id => {
                 const el = document.getElementById(id);
-                if (el.type === 'checkbox') {
-                    params[id] = el.checked;
-                } else {
-                    params[id] = el.value;
+                if (el) {
+                    if (el.type === 'checkbox') {
+                        params[id] = el.checked;
+                    } else {
+                        params[id] = el.value;
+                    }
                 }
             });
+            
+            // Map unified stroke_width to both hatch_stroke and edge_stroke
+            const strokeWidthEl = document.getElementById('stroke_width');
+            const strokeWidth = strokeWidthEl ? strokeWidthEl.value : 1.0;
+            params.hatch_stroke = strokeWidth;
+            params.edge_stroke = strokeWidth;
 
             try {
                 const res = await fetch('/process', {
@@ -1011,6 +1096,12 @@
                     }
                 }
             });
+            
+            // Include stroke_width in export (it will be mapped to both on import)
+            const strokeWidthEl = document.getElementById('stroke_width');
+            if (strokeWidthEl) {
+                settingsData.stroke_width = strokeWidthEl.value;
+            }
 
             // Create filename with date and time
             const now = new Date();
@@ -1057,11 +1148,23 @@
                             updateValue(id, settingsData[id]);
                         }
                     });
-
-                    // Trigger processing if image is loaded
-                    if (currentFilename) {
-                        triggerAutoProcess();
+                    
+                    // Handle backward compatibility: if old settings have hatch_stroke or edge_stroke, use them for stroke_width
+                    const strokeWidthEl = document.getElementById('stroke_width');
+                    if (strokeWidthEl) {
+                        if (settingsData.stroke_width !== undefined) {
+                            strokeWidthEl.value = settingsData.stroke_width;
+                            updateValue('stroke_width', settingsData.stroke_width);
+                        } else if (settingsData.hatch_stroke !== undefined) {
+                            strokeWidthEl.value = settingsData.hatch_stroke;
+                            updateValue('stroke_width', settingsData.hatch_stroke);
+                        } else if (settingsData.edge_stroke !== undefined) {
+                            strokeWidthEl.value = settingsData.edge_stroke;
+                            updateValue('stroke_width', settingsData.edge_stroke);
+                        }
                     }
+
+                    // Note: User must click Redraw to process after importing settings
                 } catch (err) {
                     alert('Failed to import settings: ' + err.message);
                 }
@@ -1069,8 +1172,26 @@
             reader.readAsText(file);
         }
 
+        // Collapsible sections
+        function initCollapsibleSections() {
+            const headers = document.querySelectorAll('.section-header');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const sectionId = header.getAttribute('data-section');
+                    const content = document.querySelector(`[data-content="${sectionId}"]`);
+                    if (content) {
+                        header.classList.toggle('collapsed');
+                        content.classList.toggle('collapsed');
+                    }
+                });
+            });
+        }
+
         // Initialize zoom for all views
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize collapsible sections
+            initCollapsibleSections();
+            
             viewConfigs.forEach(config => {
                 initZoom(config.contentId, config.innerId);
             });
@@ -1100,6 +1221,18 @@
                         importSettings(file);
                         // Reset input so same file can be selected again
                         e.target.value = '';
+                    }
+                });
+            }
+
+            // Redraw button
+            const redrawBtn = document.getElementById('redrawBtn');
+            if (redrawBtn) {
+                redrawBtn.addEventListener('click', () => {
+                    if (currentFilename) {
+                        processImage();
+                    } else {
+                        alert('Please upload an image first');
                     }
                 });
             }

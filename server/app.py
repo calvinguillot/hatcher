@@ -73,6 +73,14 @@ def process_image():
         hatch2_angle = int(data.get('hatch2_angle', 135))
         hatch3_angle = int(data.get('hatch3_angle', 90))
         
+        hatch1_angle_randomness = float(data.get('hatch1_angle_randomness', 0.0))
+        hatch2_angle_randomness = float(data.get('hatch2_angle_randomness', 0.0))
+        hatch3_angle_randomness = float(data.get('hatch3_angle_randomness', 0.0))
+        
+        hatch1_overshoot = float(data.get('hatch1_overshoot', 0.0))
+        hatch2_overshoot = float(data.get('hatch2_overshoot', 0.0))
+        hatch3_overshoot = float(data.get('hatch3_overshoot', 0.0))
+        
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         output_filename = f"processed_{filename.rsplit('.', 1)[0]}.svg"
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
@@ -160,7 +168,8 @@ def process_image():
                                         angle_deg=hatch1_angle, spacing=hatch_spacing, threshold=hatch1_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
                                         smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
-                                        join_ends_radius=hatch_join_ends)
+                                        join_ends_radius=hatch_join_ends,
+                                        angle_randomness=hatch1_angle_randomness, overshoot=hatch1_overshoot)
             hatching_group.add(hatch1)
             
             # Layer 2
@@ -168,7 +177,8 @@ def process_image():
                                         angle_deg=hatch2_angle, spacing=hatch_spacing, threshold=hatch2_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
                                         smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
-                                        join_ends_radius=hatch_join_ends)
+                                        join_ends_radius=hatch_join_ends,
+                                        angle_randomness=hatch2_angle_randomness, overshoot=hatch2_overshoot)
             hatching_group.add(hatch2)
             
             # Layer 3
@@ -183,7 +193,8 @@ def process_image():
                                         angle_deg=hatch3_angle, spacing=max(1, hatch_spacing * 0.8), threshold=hatch3_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
                                         smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
-                                        join_ends_radius=hatch_join_ends)
+                                        join_ends_radius=hatch_join_ends,
+                                        angle_randomness=hatch3_angle_randomness, overshoot=hatch3_overshoot)
             hatching_group.add(hatch3)
             
             dwg.add(hatching_group)
