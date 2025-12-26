@@ -566,6 +566,10 @@
             <div class="section-block">
                 <h3 class="section-header" data-section="edges">Edge Detection</h3>
                 <div class="section-content" data-content="edges">
+            <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <label for="edge_enabled" style="cursor:pointer">Enable Edges</label>
+                <input type="checkbox" id="edge_enabled" checked>
+            </div>
             <div style="margin-bottom:8px;">
                 <select id="edge_algo">
                     <option value="default">Standard (Gradient)</option>
@@ -776,7 +780,7 @@
         // Settings Map
         const settings = [
             'scale', 'brightness', 'contrast', 'stroke_width', 'hatch_enabled', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
-            'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
+            'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
             'hatch1_thresh', 'hatch1_angle', 'hatch1_angle_randomness', 'hatch1_overshoot',
             'hatch2_thresh', 'hatch2_angle', 'hatch2_angle_randomness', 'hatch2_overshoot',
             'hatch3_thresh', 'hatch3_angle', 'hatch3_angle_randomness', 'hatch3_overshoot'

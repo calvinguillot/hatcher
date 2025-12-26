@@ -55,6 +55,7 @@ def process_image():
         hatch_join_ends = float(data.get('hatch_join_ends', 0.0))
         
         # Edge settings
+        edge_enabled = data.get('edge_enabled', True)
         edge_thresh = int(data.get('edge_thresh', 50))
         edge_stroke = float(data.get('edge_stroke', 1.0))
         edge_min_len = int(data.get('edge_min_len', 10))
@@ -112,7 +113,7 @@ def process_image():
         
         # Generate YOLO segmentation preview if requested
         segmentation_preview_b64 = None
-        if edge_algo == 'yolo' and yolo_show_preview:
+        if edge_enabled and edge_algo == 'yolo' and yolo_show_preview:
             try:
                 import base64
                 from io import BytesIO
@@ -144,17 +145,19 @@ def process_image():
         dwg.viewbox(0, 0, width, height)
         
         # 1. Edge Layer
-        print("Tracing edges...")
-        edge_layer = stylize.trace_edges(dwg, gray_img, width, height, 
-                                       threshold=edge_thresh, 
-                                       stroke_width=edge_stroke,
-                                       min_len=edge_min_len,
-                                       algo=edge_algo,
-                                       smoothing=edge_smoothing,
-                                       smooth_method=edge_smooth_method,
-                                       border_margin=edge_border_margin,
-                                       join_radius=edge_join_radius)
-        edge_layer['id'] = 'layer-edges'
+        edge_layer = None
+        if edge_enabled:
+            print("Tracing edges...")
+            edge_layer = stylize.trace_edges(dwg, gray_img, width, height, 
+                                           threshold=edge_thresh, 
+                                           stroke_width=edge_stroke,
+                                           min_len=edge_min_len,
+                                           algo=edge_algo,
+                                           smoothing=edge_smoothing,
+                                           smooth_method=edge_smooth_method,
+                                           border_margin=edge_border_margin,
+                                           join_radius=edge_join_radius)
+            edge_layer['id'] = 'layer-edges'
         
         # 2. Hatching Layers
         if hatch_enabled:
@@ -199,8 +202,9 @@ def process_image():
             
             dwg.add(hatching_group)
         
-        # Add edges on top
-        dwg.add(edge_layer)
+        # Add edges on top (if enabled)
+        if edge_layer is not None:
+            dwg.add(edge_layer)
         
         dwg.save()
         
