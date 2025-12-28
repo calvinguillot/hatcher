@@ -529,6 +529,9 @@
                     <button id="resetViewBtn" style="flex: 1;">Reset View</button>
                 </div>
                 <button id="downloadBtn" disabled style="width: 100%;">Save SVG</button>
+                <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); text-align: center;">
+                    Processed Time: <span id="processedTime" class="value-display" style="color: var(--accent-color);">-</span>
+                </div>
                 <input type="file" id="importFileInput" accept=".txt" style="display:none;">
                 </div>
             </div>
@@ -864,6 +867,7 @@
             }
 
             isProcessing = true;
+            const startTime = performance.now();
             document.getElementById('progressModal').classList.add('active');
 
             const params = { filename: currentFilename };
@@ -968,6 +972,14 @@
                 }
             } finally {
                 isProcessing = false;
+                
+                // Calculate and display processing time
+                const endTime = performance.now();
+                const elapsedTime = ((endTime - startTime) / 1000).toFixed(2);
+                const processedTimeEl = document.getElementById('processedTime');
+                if (processedTimeEl) {
+                    processedTimeEl.textContent = `${elapsedTime}s`;
+                }
                 
                 if (pendingUpdate) {
                     pendingUpdate = false;
