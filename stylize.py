@@ -1081,6 +1081,8 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
         # Default FIND_EDGES
         edges = img_gray.filter(ImageFilter.FIND_EDGES)
         edges = ImageOps.autocontrast(edges)
+        # Apply threshold
+        edges = edges.point(lambda p: 255 if p > threshold else 0)
     
     group = dwg.g(stroke='black', stroke_width=stroke_width, fill='none')
     segments = []
@@ -1089,10 +1091,11 @@ def trace_edges(dwg, img_gray, width, height, threshold=50, stroke_width=1.0, mi
     visited = set()
     pixels = edges.load()
     
-    # Only trace if pixel value > 50 (or threshold for non-binary)
-    min_val = 50
+    # Only trace if pixel value > min_val
+    # After thresholding, default and canny algorithms produce binary images (0 or 255)
+    min_val = 128  # Default: binary after thresholding
     if algo == 'canny':
-        min_val = 128
+        min_val = 128  # Binary after thresholding
     elif algo == 'sobel':
         min_val = threshold // 2  # Sobel produces gradient magnitudes
     elif algo == 'hed':
