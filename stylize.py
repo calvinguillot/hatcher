@@ -225,11 +225,19 @@ def smooth_path_segment(points, smoothing=0.0, method='bezier'):
     
     # Apply method-specific smoothing
     if method == 'chaikin':
+        # If smoothing is 1.0, draw straight lines between consecutive points
+        # This preserves the structure of joined segments
+        if smoothing == 1.0:
+            path_data = f"M{points[0][0]:.1f},{points[0][1]:.1f}"
+            for x, y in points[1:]:
+                path_data += f" L{x:.1f},{y:.1f}"
+            return path_data
+        
         # Chaikin's algorithm: iterations based on smoothing
         iterations = max(1, int(smoothing * 4))
         smoothed_points = chaikin_smoothing(points, iterations=iterations, ratio=0.25)
         
-        # If smoothing is 1.0, also blend towards straight line
+        # If smoothing is >= 0.9, also blend towards straight line
         if smoothing >= 0.9:
             start = points[0]
             end = points[-1]
@@ -251,11 +259,19 @@ def smooth_path_segment(points, smoothing=0.0, method='bezier'):
         return path_data
     
     elif method == 'hermite':
+        # If smoothing is 1.0, draw straight lines between consecutive points
+        # This preserves the structure of joined segments
+        if smoothing == 1.0:
+            path_data = f"M{points[0][0]:.1f},{points[0][1]:.1f}"
+            for x, y in points[1:]:
+                path_data += f" L{x:.1f},{y:.1f}"
+            return path_data
+        
         # Hermite interpolation: smoothing controls tension
         tension = smoothing * 0.5  # Scale for better control
         smoothed_points = hermite_interpolation(points, smoothing=tension)
         
-        # If smoothing is 1.0, blend towards straight line
+        # If smoothing is >= 0.9, blend towards straight line
         if smoothing >= 0.9:
             start = points[0]
             end = points[-1]
@@ -287,11 +303,19 @@ def smooth_path_segment(points, smoothing=0.0, method='bezier'):
         return path_data
     
     elif method == 'sliding':
+        # If smoothing is 1.0, draw straight lines between consecutive points
+        # This preserves the structure of joined segments
+        if smoothing == 1.0:
+            path_data = f"M{points[0][0]:.1f},{points[0][1]:.1f}"
+            for x, y in points[1:]:
+                path_data += f" L{x:.1f},{y:.1f}"
+            return path_data
+        
         # Sliding average: window size based on smoothing
         window_size = max(3, min(15, int(3 + smoothing * 12)))
         smoothed_points = sliding_average_smoothing(points, window_size=window_size)
         
-        # If smoothing is 1.0, blend towards straight line
+        # If smoothing is >= 0.9, blend towards straight line
         if smoothing >= 0.9:
             start = points[0]
             end = points[-1]
@@ -314,10 +338,12 @@ def smooth_path_segment(points, smoothing=0.0, method='bezier'):
     
     # Default: Bezier method (original implementation)
     if smoothing == 1.0:
-        # Maximum smoothing - straight line from start to end
-        start = points[0]
-        end = points[-1]
-        return f"M{start[0]:.1f},{start[1]:.1f} L{end[0]:.1f},{end[1]:.1f}"
+        # Maximum smoothing - draw straight lines between consecutive points
+        # This preserves the structure of joined segments while making each segment straight
+        path_data = f"M{points[0][0]:.1f},{points[0][1]:.1f}"
+        for x, y in points[1:]:
+            path_data += f" L{x:.1f},{y:.1f}"
+        return path_data
     
     # Intermediate smoothing: create smooth curve that interpolates between
     # original path and straight line based on smoothing value
