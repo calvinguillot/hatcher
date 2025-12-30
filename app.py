@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 from flask import Flask, render_template, request, send_from_directory, jsonify
 from PIL import Image, ImageEnhance
 import svgwrite
@@ -97,7 +98,10 @@ def process_image():
             ]
         
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        output_filename = f"processed_{filename.rsplit('.', 1)[0]}.svg"
+        
+        # Generate filename with same format as txt file: hatcher_YYYY-MM-DD_HH-MM-SS.svg
+        now = datetime.now()
+        output_filename = f"hatcher_{now.year}-{now.month:02d}-{now.day:02d}_{now.hour:02d}-{now.minute:02d}-{now.second:02d}.svg"
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
         
         # Load and process image

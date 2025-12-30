@@ -777,8 +777,8 @@
         function updateValue(id, val) {
             const display = document.getElementById(id + '_val');
             if (display) {
-                // Format overshoot and spacing values to 2 decimal places
-                if (id.includes('overshoot') || id.includes('spacing')) {
+                // Format overshoot, spacing, and angle_randomness values to 2 decimal places
+                if (id.includes('overshoot') || id.includes('spacing') || id.includes('angle_randomness')) {
                     display.textContent = parseFloat(val).toFixed(2);
                 } else {
                     display.textContent = val;
@@ -803,7 +803,7 @@
             const valueDisplay = document.createElement('span');
             valueDisplay.id = `layer${layerIndex}_${prop}_val`;
             valueDisplay.className = 'value-display';
-            if (prop.includes('overshoot') || prop.includes('spacing')) {
+            if (prop.includes('overshoot') || prop.includes('spacing') || prop.includes('angle_randomness')) {
                 valueDisplay.textContent = parseFloat(value).toFixed(2);
             } else {
                 valueDisplay.textContent = value;
@@ -884,7 +884,7 @@
             
             const angleRandItem = document.createElement('div');
             angleRandItem.className = 'control-item';
-            angleRandItem.appendChild(createControl(angleRandItem, layerIndex, 'angle_randomness', 'Angle Rand', 0, 90, 1, layerData.angle_randomness, 'Random angle variation in degrees (0-90)'));
+            angleRandItem.appendChild(createControl(angleRandItem, layerIndex, 'angle_randomness', 'Angle Rand', 0, 10, 0.01, layerData.angle_randomness, 'Random angle variation in degrees (0-10)'));
             angleGrid.appendChild(angleRandItem);
             
             controlsContainer.appendChild(angleGrid);
