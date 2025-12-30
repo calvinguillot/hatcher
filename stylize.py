@@ -820,37 +820,62 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
     segments = []
     
     def apply_overshoot(segment):
-        """Apply random overshoot to a segment if overshoot > 0.
-        Randomly extends the segment end by 0 to overshoot pixels.
+        """Apply overshoot to a segment if overshoot > 0.
+        Extends the entire line along the same angle.
+        overshoot: 0 = no extension, 1 = line is twice as long (100% extension)
         """
         if overshoot <= 0 or len(segment) < 2:
             return segment
         
-        # Calculate direction from last two points
-        last_point = segment[-1]
-        second_last = segment[-2]
-        dx = last_point[0] - second_last[0]
-        dy = last_point[1] - second_last[1]
+        # Calculate direction vector from start to end
+        start_point = segment[0]
+        end_point = segment[-1]
+        dx = end_point[0] - start_point[0]
+        dy = end_point[1] - start_point[1]
+        
+        # Calculate original length
+        length = math.sqrt(dx*dx + dy*dy)
+        if length == 0:
+            return segment
         
         # Normalize direction
-        length = math.sqrt(dx*dx + dy*dy)
-        if length > 0:
-            dx /= length
-            dy /= length
-            
-            # Random overshoot distance (0 to overshoot)
-            # Sometimes no overshoot (random), sometimes up to max
-            overshoot_dist = random.uniform(0, overshoot)
-            
-            # Extend the last point
-            new_x = last_point[0] + dx * overshoot_dist
-            new_y = last_point[1] + dy * overshoot_dist
-            
-            # Create new segment with overshoot point
-            new_segment = segment + [(new_x, new_y)]
-            return new_segment
+        dir_x = dx / length
+        dir_y = dy / length
         
-        return segment
+        # Calculate extension amount
+        # overshoot = 1 means line is twice as long, so extend by 100% of original length
+        # We extend both ends equally, so each end extends by length * overshoot / 2
+        extension = length * overshoot / 2
+        
+        # Calculate new start and end points
+        new_start_x = start_point[0] - dir_x * extension
+        new_start_y = start_point[1] - dir_y * extension
+        new_end_x = end_point[0] + dir_x * extension
+        new_end_y = end_point[1] + dir_y * extension
+        
+        # Scale all intermediate points proportionally along the same direction
+        new_segment = []
+        for point in segment:
+            # Calculate position along original line (0 = start, 1 = end)
+            if length > 0:
+                # Vector from start to this point
+                px = point[0] - start_point[0]
+                py = point[1] - start_point[1]
+                # Project onto direction vector to get position along line
+                t = (px * dir_x + py * dir_y) / length
+            else:
+                t = 0
+            
+            # Clamp t to [0, 1] for points within original segment
+            t = max(0, min(1, t))
+            
+            # Calculate new position on extended line
+            # New line goes from new_start to new_end
+            new_x = new_start_x + (new_end_x - new_start_x) * t
+            new_y = new_start_y + (new_end_y - new_start_y) * t
+            new_segment.append((new_x, new_y))
+        
+        return new_segment
     
     # Step through lines
     y_step = spacing
