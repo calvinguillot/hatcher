@@ -166,6 +166,65 @@
             text-shadow: 0 0 4px var(--accent-glow);
         }
 
+        .layer-controls {
+            margin-bottom: 8px;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .layer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .layer-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .layer-delete-btn {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.65rem;
+            transition: all 0.2s;
+            min-width: 50px;
+        }
+
+        .layer-delete-btn:hover {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+        }
+
+        .add-layer-btn {
+            background: linear-gradient(135deg, var(--success-color), #12c982);
+            color: #fff;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .add-layer-btn:hover {
+            background: linear-gradient(135deg, #12c982, var(--success-color));
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+        }
+
         input[type="range"] {
             width: 100%;
             height: 6px;
@@ -651,87 +710,8 @@
             <!-- Layers Section (inside Hatching) -->
             <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
                 <h4 style="margin: 0 0 12px 0; font-size: 0.75rem; font-weight: 600; color: var(--text-color); text-transform: uppercase; letter-spacing: 1px;">Layers</h4>
-                
-                <!-- Layer 1 -->
-                <div style="margin-bottom: 16px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
-                    <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 1</div>
-                    <div class="control-item">
-                        <div class="control-row"><label>Threshold</label><span id="hatch1_thresh_val" class="value-display">200</span></div>
-                        <input type="range" id="hatch1_thresh" min="0" max="255" value="200">
-                    </div>
-                    <div class="control-item" style="margin-top: 8px;">
-                        <div class="control-row"><label>Spacing</label><span id="hatch1_spacing_val" class="value-display">5.0</span></div>
-                        <input type="range" id="hatch1_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
-                    </div>
-                    <div class="grid-2" style="margin-top: 8px;">
-                        <div class="control-item">
-                            <div class="control-row"><label>Angle</label><span id="hatch1_angle_val" class="value-display">45</span></div>
-                            <input type="range" id="hatch1_angle" min="0" max="180" value="45">
-                        </div>
-                        <div class="control-item">
-                            <div class="control-row"><label>Angle Rand</label><span id="hatch1_angle_randomness_val" class="value-display">0</span></div>
-                            <input type="range" id="hatch1_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
-                        </div>
-                    </div>
-                    <div class="control-item" style="margin-top: 8px;">
-                        <div class="control-row"><label>Overshoot</label><span id="hatch1_overshoot_val" class="value-display">0</span></div>
-                        <input type="range" id="hatch1_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
-                    </div>
-                </div>
-                
-                <!-- Layer 2 -->
-                <div style="margin-bottom: 16px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
-                    <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 2</div>
-                    <div class="control-item">
-                        <div class="control-row"><label>Threshold</label><span id="hatch2_thresh_val" class="value-display">140</span></div>
-                        <input type="range" id="hatch2_thresh" min="0" max="255" value="140">
-                    </div>
-                    <div class="control-item" style="margin-top: 8px;">
-                        <div class="control-row"><label>Spacing</label><span id="hatch2_spacing_val" class="value-display">5.0</span></div>
-                        <input type="range" id="hatch2_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
-                    </div>
-                    <div class="grid-2" style="margin-top: 8px;">
-                        <div class="control-item">
-                            <div class="control-row"><label>Angle</label><span id="hatch2_angle_val" class="value-display">135</span></div>
-                            <input type="range" id="hatch2_angle" min="0" max="180" value="135">
-                        </div>
-                        <div class="control-item">
-                            <div class="control-row"><label>Angle Rand</label><span id="hatch2_angle_randomness_val" class="value-display">0</span></div>
-                            <input type="range" id="hatch2_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
-                        </div>
-                    </div>
-                    <div class="control-item" style="margin-top: 8px;">
-                        <div class="control-row"><label>Overshoot</label><span id="hatch2_overshoot_val" class="value-display">0</span></div>
-                        <input type="range" id="hatch2_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
-                    </div>
-                </div>
-                
-                <!-- Layer 3 -->
-                <div style="margin-bottom: 8px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
-                    <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 3</div>
-                    <div class="control-item">
-                        <div class="control-row"><label>Threshold</label><span id="hatch3_thresh_val" class="value-display">80</span></div>
-                        <input type="range" id="hatch3_thresh" min="0" max="255" value="80">
-                    </div>
-                    <div class="control-item" style="margin-top: 8px;">
-                        <div class="control-row"><label>Spacing</label><span id="hatch3_spacing_val" class="value-display">5.0</span></div>
-                        <input type="range" id="hatch3_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
-                    </div>
-                    <div class="grid-2" style="margin-top: 8px;">
-                        <div class="control-item">
-                            <div class="control-row"><label>Angle</label><span id="hatch3_angle_val" class="value-display">90</span></div>
-                            <input type="range" id="hatch3_angle" min="0" max="180" value="90">
-                        </div>
-                        <div class="control-item">
-                            <div class="control-row"><label>Angle Rand</label><span id="hatch3_angle_randomness_val" class="value-display">0</span></div>
-                            <input type="range" id="hatch3_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
-                        </div>
-                    </div>
-                    <div class="control-item" style="margin-top: 8px;">
-                        <div class="control-row"><label>Overshoot</label><span id="hatch3_overshoot_val" class="value-display">0</span></div>
-                        <input type="range" id="hatch3_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
-                    </div>
-                </div>
+                <div id="layersContainer"></div>
+                <button class="add-layer-btn" id="addLayerBtn">+ Add Layer</button>
             </div>
                 </div>
             </div>
@@ -781,14 +761,16 @@
         let currentFilename = null;
         let isProcessing = false;
         let pendingUpdate = false;
+        let hatchLayers = [
+            { thresh: 200, spacing: 5.0, angle: 45, angle_randomness: 0, overshoot: 0 },
+            { thresh: 140, spacing: 5.0, angle: 135, angle_randomness: 0, overshoot: 0 },
+            { thresh: 80, spacing: 5.0, angle: 90, angle_randomness: 0, overshoot: 0 }
+        ];
 
-        // Settings Map
+        // Settings Map (excluding dynamic layers)
         const settings = [
             'scale', 'brightness', 'contrast', 'stroke_width', 'hatch_enabled', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
-            'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
-            'hatch1_thresh', 'hatch1_spacing', 'hatch1_angle', 'hatch1_angle_randomness', 'hatch1_overshoot',
-            'hatch2_thresh', 'hatch2_spacing', 'hatch2_angle', 'hatch2_angle_randomness', 'hatch2_overshoot',
-            'hatch3_thresh', 'hatch3_spacing', 'hatch3_angle', 'hatch3_angle_randomness', 'hatch3_overshoot'
+            'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview'
         ];
 
         // UI Update Helpers
@@ -804,6 +786,146 @@
             }
         }
 
+        // Create a helper function to create a control with slider
+        function createControl(container, layerIndex, prop, label, min, max, step, value, title = '') {
+            const controlItem = document.createElement('div');
+            controlItem.className = 'control-item';
+            if (container.children.length > 0) {
+                controlItem.style.marginTop = '8px';
+            }
+
+            const controlRow = document.createElement('div');
+            controlRow.className = 'control-row';
+            
+            const labelEl = document.createElement('label');
+            labelEl.textContent = label;
+            
+            const valueDisplay = document.createElement('span');
+            valueDisplay.id = `layer${layerIndex}_${prop}_val`;
+            valueDisplay.className = 'value-display';
+            if (prop.includes('overshoot') || prop.includes('spacing')) {
+                valueDisplay.textContent = parseFloat(value).toFixed(2);
+            } else {
+                valueDisplay.textContent = value;
+            }
+            
+            controlRow.appendChild(labelEl);
+            controlRow.appendChild(valueDisplay);
+            
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.id = `layer${layerIndex}_${prop}`;
+            slider.min = min;
+            slider.max = max;
+            slider.step = step;
+            slider.value = value;
+            if (title) slider.title = title;
+            
+            // Sync slider
+            slider.addEventListener('input', (e) => {
+                const val = e.target.value;
+                updateValue(`layer${layerIndex}_${prop}`, val);
+                hatchLayers[layerIndex][prop] = parseFloat(val);
+            });
+            
+            controlItem.appendChild(controlRow);
+            controlItem.appendChild(slider);
+            
+            return controlItem;
+        }
+
+        // Render a single layer
+        function renderLayer(layerIndex, layerData) {
+            const layerDiv = document.createElement('div');
+            layerDiv.className = 'layer-controls';
+            layerDiv.id = `layer${layerIndex}_container`;
+            layerDiv.style.marginBottom = layerIndex < hatchLayers.length - 1 ? '16px' : '8px';
+            
+            const layerHeader = document.createElement('div');
+            layerHeader.className = 'layer-header';
+            
+            const layerTitle = document.createElement('div');
+            layerTitle.textContent = `Layer ${layerIndex + 1}`;
+            
+            const layerActions = document.createElement('div');
+            layerActions.className = 'layer-actions';
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'layer-delete-btn';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => deleteLayer(layerIndex);
+            if (hatchLayers.length <= 1) {
+                deleteBtn.disabled = true;
+                deleteBtn.style.opacity = '0.5';
+                deleteBtn.style.cursor = 'not-allowed';
+            }
+            
+            layerActions.appendChild(deleteBtn);
+            layerHeader.appendChild(layerTitle);
+            layerHeader.appendChild(layerActions);
+            
+            const controlsContainer = document.createElement('div');
+            
+            // Threshold (1 column)
+            controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'thresh', 'Threshold', 0, 255, 1, layerData.thresh));
+            
+            // Spacing (1 column)
+            controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'spacing', 'Spacing', 1.0, 20.0, 0.05, layerData.spacing));
+            
+            // Angle and Angle Rand (2 columns)
+            const angleGrid = document.createElement('div');
+            angleGrid.className = 'grid-2';
+            angleGrid.style.marginTop = '8px';
+            
+            const angleItem = document.createElement('div');
+            angleItem.className = 'control-item';
+            angleItem.appendChild(createControl(angleItem, layerIndex, 'angle', 'Angle', 0, 180, 1, layerData.angle));
+            angleGrid.appendChild(angleItem);
+            
+            const angleRandItem = document.createElement('div');
+            angleRandItem.className = 'control-item';
+            angleRandItem.appendChild(createControl(angleRandItem, layerIndex, 'angle_randomness', 'Angle Rand', 0, 90, 1, layerData.angle_randomness, 'Random angle variation in degrees (0-90)'));
+            angleGrid.appendChild(angleRandItem);
+            
+            controlsContainer.appendChild(angleGrid);
+            
+            // Overshoot (1 column)
+            controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'overshoot', 'Overshoot', 0, 1, 0.01, layerData.overshoot, 'Line extension factor (0 = none, 1 = twice as long)'));
+            
+            layerDiv.appendChild(layerHeader);
+            layerDiv.appendChild(controlsContainer);
+            
+            return layerDiv;
+        }
+
+        // Render all layers
+        function renderLayers() {
+            const container = document.getElementById('layersContainer');
+            container.innerHTML = '';
+            hatchLayers.forEach((layer, index) => {
+                container.appendChild(renderLayer(index, layer));
+            });
+        }
+
+        // Add a new layer
+        function addLayer() {
+            hatchLayers.push({
+                thresh: 128,
+                spacing: 5.0,
+                angle: 90,
+                angle_randomness: 0,
+                overshoot: 0
+            });
+            renderLayers();
+        }
+
+        // Delete a layer
+        function deleteLayer(index) {
+            if (hatchLayers.length <= 1) return;
+            hatchLayers.splice(index, 1);
+            renderLayers();
+        }
+
         // Show/hide YOLO preview option based on edge algorithm
         function updateYOLOPreviewVisibility() {
             const edgeAlgo = document.getElementById('edge_algo');
@@ -812,6 +934,7 @@
                 yoloPreviewOption.style.display = edgeAlgo.value === 'yolo' ? 'block' : 'none';
             }
         }
+
 
         // Attach listeners
         settings.forEach(id => {
@@ -896,6 +1019,9 @@
             const strokeWidth = strokeWidthEl ? strokeWidthEl.value : 1.0;
             params.hatch_stroke = strokeWidth;
             params.edge_stroke = strokeWidth;
+            
+            // Add dynamic layers
+            params.hatch_layers = hatchLayers;
 
             try {
                 const res = await fetch('/process', {
@@ -1127,6 +1253,9 @@
             if (strokeWidthEl) {
                 settingsData.stroke_width = strokeWidthEl.value;
             }
+            
+            // Include dynamic layers
+            settingsData.hatch_layers = hatchLayers;
 
             // Create filename with date and time
             const now = new Date();
@@ -1189,17 +1318,37 @@
                         }
                     }
                     
-                    // Handle backward compatibility: if old settings have hatch_spacing, apply to all layers
-                    if (settingsData.hatch_spacing !== undefined) {
-                        ['hatch1_spacing', 'hatch2_spacing', 'hatch3_spacing'].forEach(id => {
-                            if (settingsData[id] === undefined) {
-                                const el = document.getElementById(id);
-                                if (el) {
-                                    el.value = settingsData.hatch_spacing;
-                                    updateValue(id, settingsData.hatch_spacing);
-                                }
+                    // Handle dynamic layers
+                    if (settingsData.hatch_layers && Array.isArray(settingsData.hatch_layers)) {
+                        hatchLayers = settingsData.hatch_layers;
+                        renderLayers();
+                    } else {
+                        // Backward compatibility: convert old format to new format
+                        const defaultSpacing = settingsData.hatch_spacing || 5.0;
+                        hatchLayers = [
+                            {
+                                thresh: settingsData.hatch1_thresh !== undefined ? parseInt(settingsData.hatch1_thresh) : 200,
+                                spacing: settingsData.hatch1_spacing !== undefined ? parseFloat(settingsData.hatch1_spacing) : defaultSpacing,
+                                angle: settingsData.hatch1_angle !== undefined ? parseInt(settingsData.hatch1_angle) : 45,
+                                angle_randomness: settingsData.hatch1_angle_randomness !== undefined ? parseFloat(settingsData.hatch1_angle_randomness) : 0,
+                                overshoot: settingsData.hatch1_overshoot !== undefined ? parseFloat(settingsData.hatch1_overshoot) : 0
+                            },
+                            {
+                                thresh: settingsData.hatch2_thresh !== undefined ? parseInt(settingsData.hatch2_thresh) : 140,
+                                spacing: settingsData.hatch2_spacing !== undefined ? parseFloat(settingsData.hatch2_spacing) : defaultSpacing,
+                                angle: settingsData.hatch2_angle !== undefined ? parseInt(settingsData.hatch2_angle) : 135,
+                                angle_randomness: settingsData.hatch2_angle_randomness !== undefined ? parseFloat(settingsData.hatch2_angle_randomness) : 0,
+                                overshoot: settingsData.hatch2_overshoot !== undefined ? parseFloat(settingsData.hatch2_overshoot) : 0
+                            },
+                            {
+                                thresh: settingsData.hatch3_thresh !== undefined ? parseInt(settingsData.hatch3_thresh) : 80,
+                                spacing: settingsData.hatch3_spacing !== undefined ? parseFloat(settingsData.hatch3_spacing) : defaultSpacing,
+                                angle: settingsData.hatch3_angle !== undefined ? parseInt(settingsData.hatch3_angle) : 90,
+                                angle_randomness: settingsData.hatch3_angle_randomness !== undefined ? parseFloat(settingsData.hatch3_angle_randomness) : 0,
+                                overshoot: settingsData.hatch3_overshoot !== undefined ? parseFloat(settingsData.hatch3_overshoot) : 0
                             }
-                        });
+                        ];
+                        renderLayers();
                     }
 
                     // Note: User must click Redraw to process after importing settings
@@ -1229,6 +1378,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize collapsible sections
             initCollapsibleSections();
+            
+            // Initialize layers
+            renderLayers();
+            
+            // Add layer button
+            const addLayerBtn = document.getElementById('addLayerBtn');
+            if (addLayerBtn) {
+                addLayerBtn.addEventListener('click', addLayer);
+            }
             
             viewConfigs.forEach(config => {
                 initZoom(config.contentId, config.innerId);

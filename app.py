@@ -66,26 +66,35 @@ def process_image():
         edge_join_radius = float(data.get('edge_join_radius', 5.0))
         yolo_show_preview = data.get('yolo_show_preview', False)
         
-        hatch1_thresh = int(data.get('hatch1_thresh', 200))
-        hatch2_thresh = int(data.get('hatch2_thresh', 140))
-        hatch3_thresh = int(data.get('hatch3_thresh', 80))
+        # Dynamic hatching layers - get from layers array or fallback to old format
+        hatch_layers = data.get('hatch_layers', [])
         
-        hatch1_angle = int(data.get('hatch1_angle', 45))
-        hatch2_angle = int(data.get('hatch2_angle', 135))
-        hatch3_angle = int(data.get('hatch3_angle', 90))
-        
-        hatch1_angle_randomness = float(data.get('hatch1_angle_randomness', 0.0))
-        hatch2_angle_randomness = float(data.get('hatch2_angle_randomness', 0.0))
-        hatch3_angle_randomness = float(data.get('hatch3_angle_randomness', 0.0))
-        
-        hatch1_overshoot = float(data.get('hatch1_overshoot', 0.0))
-        hatch2_overshoot = float(data.get('hatch2_overshoot', 0.0))
-        hatch3_overshoot = float(data.get('hatch3_overshoot', 0.0))
-        
-        # Individual spacing for each layer (fallback to global hatch_spacing for backward compatibility)
-        hatch1_spacing = float(data.get('hatch1_spacing', data.get('hatch_spacing', 5.0)))
-        hatch2_spacing = float(data.get('hatch2_spacing', data.get('hatch_spacing', 5.0)))
-        hatch3_spacing = float(data.get('hatch3_spacing', data.get('hatch_spacing', 5.0)))
+        # Backward compatibility: convert old format to new format
+        if not hatch_layers:
+            default_spacing = data.get('hatch_spacing', 5.0)
+            hatch_layers = [
+                {
+                    'thresh': int(data.get('hatch1_thresh', 200)),
+                    'angle': int(data.get('hatch1_angle', 45)),
+                    'angle_randomness': float(data.get('hatch1_angle_randomness', 0.0)),
+                    'overshoot': float(data.get('hatch1_overshoot', 0.0)),
+                    'spacing': float(data.get('hatch1_spacing', default_spacing))
+                },
+                {
+                    'thresh': int(data.get('hatch2_thresh', 140)),
+                    'angle': int(data.get('hatch2_angle', 135)),
+                    'angle_randomness': float(data.get('hatch2_angle_randomness', 0.0)),
+                    'overshoot': float(data.get('hatch2_overshoot', 0.0)),
+                    'spacing': float(data.get('hatch2_spacing', default_spacing))
+                },
+                {
+                    'thresh': int(data.get('hatch3_thresh', 80)),
+                    'angle': int(data.get('hatch3_angle', 90)),
+                    'angle_randomness': float(data.get('hatch3_angle_randomness', 0.0)),
+                    'overshoot': float(data.get('hatch3_overshoot', 0.0)),
+                    'spacing': float(data.get('hatch3_spacing', default_spacing))
+                }
+            ]
         
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         output_filename = f"processed_{filename.rsplit('.', 1)[0]}.svg"
@@ -166,37 +175,25 @@ def process_image():
         
         # 2. Hatching Layers
         if hatch_enabled:
-            print("Generating hatching layers...")
+            print(f"Generating {len(hatch_layers)} hatching layers...")
             
             # Hatching Group
             hatching_group = dwg.g(id='layer-hatching')
             
-            # Layer 1
-            hatch1 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch1_angle, spacing=hatch1_spacing, threshold=hatch1_thresh, 
-                                        stroke_width=hatch_stroke, min_len=hatch_min_len, 
-                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
-                                        join_ends_radius=hatch_join_ends,
-                                        angle_randomness=hatch1_angle_randomness, overshoot=hatch1_overshoot)
-            hatching_group.add(hatch1)
-            
-            # Layer 2
-            hatch2 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch2_angle, spacing=hatch2_spacing, threshold=hatch2_thresh, 
-                                        stroke_width=hatch_stroke, min_len=hatch_min_len, 
-                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
-                                        join_ends_radius=hatch_join_ends,
-                                        angle_randomness=hatch2_angle_randomness, overshoot=hatch2_overshoot)
-            hatching_group.add(hatch2)
-            
-            # Layer 3
-            hatch3 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch3_angle, spacing=hatch3_spacing, threshold=hatch3_thresh, 
-                                        stroke_width=hatch_stroke, min_len=hatch_min_len, 
-                                        smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
-                                        join_ends_radius=hatch_join_ends,
-                                        angle_randomness=hatch3_angle_randomness, overshoot=hatch3_overshoot)
-            hatching_group.add(hatch3)
+            # Process each layer dynamically
+            for i, layer in enumerate(hatch_layers):
+                hatch = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
+                                            angle_deg=int(layer.get('angle', 45)), 
+                                            spacing=float(layer.get('spacing', 5.0)), 
+                                            threshold=int(layer.get('thresh', 200)), 
+                                            stroke_width=hatch_stroke, 
+                                            min_len=hatch_min_len, 
+                                            smoothing=hatch_smoothing, 
+                                            smooth_method=hatch_smooth_method,
+                                            join_ends_radius=hatch_join_ends,
+                                            angle_randomness=float(layer.get('angle_randomness', 0.0)), 
+                                            overshoot=float(layer.get('overshoot', 0.0)))
+                hatching_group.add(hatch)
             
             dwg.add(hatching_group)
         
