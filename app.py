@@ -82,6 +82,11 @@ def process_image():
         hatch2_overshoot = float(data.get('hatch2_overshoot', 0.0))
         hatch3_overshoot = float(data.get('hatch3_overshoot', 0.0))
         
+        # Individual spacing for each layer (fallback to global hatch_spacing for backward compatibility)
+        hatch1_spacing = float(data.get('hatch1_spacing', data.get('hatch_spacing', 5.0)))
+        hatch2_spacing = float(data.get('hatch2_spacing', data.get('hatch_spacing', 5.0)))
+        hatch3_spacing = float(data.get('hatch3_spacing', data.get('hatch_spacing', 5.0)))
+        
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         output_filename = f"processed_{filename.rsplit('.', 1)[0]}.svg"
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
@@ -168,7 +173,7 @@ def process_image():
             
             # Layer 1
             hatch1 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch1_angle, spacing=hatch_spacing, threshold=hatch1_thresh, 
+                                        angle_deg=hatch1_angle, spacing=hatch1_spacing, threshold=hatch1_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
                                         smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
                                         join_ends_radius=hatch_join_ends,
@@ -177,7 +182,7 @@ def process_image():
             
             # Layer 2
             hatch2 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch2_angle, spacing=hatch_spacing, threshold=hatch2_thresh, 
+                                        angle_deg=hatch2_angle, spacing=hatch2_spacing, threshold=hatch2_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
                                         smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
                                         join_ends_radius=hatch_join_ends,
@@ -185,15 +190,8 @@ def process_image():
             hatching_group.add(hatch2)
             
             # Layer 3
-            # Layer 3 usually denser, maybe scale spacing? Or just use same spacing for simplicity/consistency as requested.
-            # The prompt implies a single control for separation.
-            # Previous code had spacing=5 for L1/L2 and spacing=4 for L3.
-            # I will apply the multiplier or offset if needed, but for now strict user control is better.
-            # Let's maybe make L3 slightly denser relative to the setting? 
-            # Or just use the setting directly. "control the separion of the lines". Implies direct control.
-            # I'll use the raw value.
             hatch3 = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
-                                        angle_deg=hatch3_angle, spacing=max(1, hatch_spacing * 0.8), threshold=hatch3_thresh, 
+                                        angle_deg=hatch3_angle, spacing=hatch3_spacing, threshold=hatch3_thresh, 
                                         stroke_width=hatch_stroke, min_len=hatch_min_len, 
                                         smoothing=hatch_smoothing, smooth_method=hatch_smooth_method,
                                         join_ends_radius=hatch_join_ends,

@@ -625,10 +625,6 @@
                 <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
                 <input type="checkbox" id="hatch_enabled" checked>
             </div>
-            <div class="control-item">
-                <div class="control-row"><label>Spacing</label><span id="hatch_spacing_val" class="value-display">5.0</span></div>
-                <input type="range" id="hatch_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
-            </div>
             <div class="control-item" style="margin-top: 8px;">
                 <div class="control-row"><label>Join Ends</label><span id="hatch_join_ends_val" class="value-display">0</span></div>
                 <input type="range" id="hatch_join_ends" min="0" max="50" step="1" value="0" title="Join adjacent hatch segments into a single zig-zag path when their endpoints are within this radius (px). 0 disables joining.">
@@ -659,75 +655,81 @@
                 <!-- Layer 1 -->
                 <div style="margin-bottom: 16px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
                     <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 1</div>
-                    <div class="grid-2">
-                        <div class="control-item">
-                            <div class="control-row"><label>Threshold</label><span id="hatch1_thresh_val" class="value-display">200</span></div>
-                            <input type="range" id="hatch1_thresh" min="0" max="255" value="200">
-                        </div>
+                    <div class="control-item">
+                        <div class="control-row"><label>Threshold</label><span id="hatch1_thresh_val" class="value-display">200</span></div>
+                        <input type="range" id="hatch1_thresh" min="0" max="255" value="200">
+                    </div>
+                    <div class="control-item" style="margin-top: 8px;">
+                        <div class="control-row"><label>Spacing</label><span id="hatch1_spacing_val" class="value-display">5.0</span></div>
+                        <input type="range" id="hatch1_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
+                    </div>
+                    <div class="grid-2" style="margin-top: 8px;">
                         <div class="control-item">
                             <div class="control-row"><label>Angle</label><span id="hatch1_angle_val" class="value-display">45</span></div>
                             <input type="range" id="hatch1_angle" min="0" max="180" value="45">
                         </div>
-                    </div>
-                    <div class="grid-2" style="margin-top: 8px;">
                         <div class="control-item">
                             <div class="control-row"><label>Angle Rand</label><span id="hatch1_angle_randomness_val" class="value-display">0</span></div>
                             <input type="range" id="hatch1_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
                         </div>
-                        <div class="control-item">
-                            <div class="control-row"><label>Overshoot</label><span id="hatch1_overshoot_val" class="value-display">0</span></div>
-                            <input type="range" id="hatch1_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
-                        </div>
+                    </div>
+                    <div class="control-item" style="margin-top: 8px;">
+                        <div class="control-row"><label>Overshoot</label><span id="hatch1_overshoot_val" class="value-display">0</span></div>
+                        <input type="range" id="hatch1_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
                     </div>
                 </div>
                 
                 <!-- Layer 2 -->
                 <div style="margin-bottom: 16px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
                     <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 2</div>
-                    <div class="grid-2">
-                        <div class="control-item">
-                            <div class="control-row"><label>Threshold</label><span id="hatch2_thresh_val" class="value-display">140</span></div>
-                            <input type="range" id="hatch2_thresh" min="0" max="255" value="140">
-                        </div>
+                    <div class="control-item">
+                        <div class="control-row"><label>Threshold</label><span id="hatch2_thresh_val" class="value-display">140</span></div>
+                        <input type="range" id="hatch2_thresh" min="0" max="255" value="140">
+                    </div>
+                    <div class="control-item" style="margin-top: 8px;">
+                        <div class="control-row"><label>Spacing</label><span id="hatch2_spacing_val" class="value-display">5.0</span></div>
+                        <input type="range" id="hatch2_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
+                    </div>
+                    <div class="grid-2" style="margin-top: 8px;">
                         <div class="control-item">
                             <div class="control-row"><label>Angle</label><span id="hatch2_angle_val" class="value-display">135</span></div>
                             <input type="range" id="hatch2_angle" min="0" max="180" value="135">
                         </div>
-                    </div>
-                    <div class="grid-2" style="margin-top: 8px;">
                         <div class="control-item">
                             <div class="control-row"><label>Angle Rand</label><span id="hatch2_angle_randomness_val" class="value-display">0</span></div>
                             <input type="range" id="hatch2_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
                         </div>
-                        <div class="control-item">
-                            <div class="control-row"><label>Overshoot</label><span id="hatch2_overshoot_val" class="value-display">0</span></div>
-                            <input type="range" id="hatch2_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
-                        </div>
+                    </div>
+                    <div class="control-item" style="margin-top: 8px;">
+                        <div class="control-row"><label>Overshoot</label><span id="hatch2_overshoot_val" class="value-display">0</span></div>
+                        <input type="range" id="hatch2_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
                     </div>
                 </div>
                 
                 <!-- Layer 3 -->
                 <div style="margin-bottom: 8px; padding: 10px; background: #0a0a0a; border-radius: 6px; border: 1px solid var(--border-color);">
                     <div style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 600; color: var(--text-color);">Layer 3</div>
-                    <div class="grid-2">
-                        <div class="control-item">
-                            <div class="control-row"><label>Threshold</label><span id="hatch3_thresh_val" class="value-display">80</span></div>
-                            <input type="range" id="hatch3_thresh" min="0" max="255" value="80">
-                        </div>
+                    <div class="control-item">
+                        <div class="control-row"><label>Threshold</label><span id="hatch3_thresh_val" class="value-display">80</span></div>
+                        <input type="range" id="hatch3_thresh" min="0" max="255" value="80">
+                    </div>
+                    <div class="control-item" style="margin-top: 8px;">
+                        <div class="control-row"><label>Spacing</label><span id="hatch3_spacing_val" class="value-display">5.0</span></div>
+                        <input type="range" id="hatch3_spacing" min="1.0" max="20.0" step="0.05" value="5.0">
+                    </div>
+                    <div class="grid-2" style="margin-top: 8px;">
                         <div class="control-item">
                             <div class="control-row"><label>Angle</label><span id="hatch3_angle_val" class="value-display">90</span></div>
                             <input type="range" id="hatch3_angle" min="0" max="180" value="90">
                         </div>
-                    </div>
-                    <div class="grid-2" style="margin-top: 8px;">
                         <div class="control-item">
                             <div class="control-row"><label>Angle Rand</label><span id="hatch3_angle_randomness_val" class="value-display">0</span></div>
                             <input type="range" id="hatch3_angle_randomness" min="0" max="90" step="1" value="0" title="Random angle variation in degrees (0-90)">
                         </div>
-                        <div class="control-item">
-                            <div class="control-row"><label>Overshoot</label><span id="hatch3_overshoot_val" class="value-display">0</span></div>
-                            <input type="range" id="hatch3_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
-                        </div>
+                    </div>
+                    <div class="control-item" style="margin-top: 8px;">
+                        <div class="control-row"><label>Overshoot</label><span id="hatch3_overshoot_val" class="value-display">0</span></div>
+                        <input type="range" id="hatch3_overshoot" min="0" max="1" step="0.01" value="0" title="Line extension factor (0 = none, 1 = twice as long)">
                     </div>
                 </div>
             </div>
@@ -782,19 +784,19 @@
 
         // Settings Map
         const settings = [
-            'scale', 'brightness', 'contrast', 'stroke_width', 'hatch_enabled', 'hatch_spacing', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
+            'scale', 'brightness', 'contrast', 'stroke_width', 'hatch_enabled', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
             'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
-            'hatch1_thresh', 'hatch1_angle', 'hatch1_angle_randomness', 'hatch1_overshoot',
-            'hatch2_thresh', 'hatch2_angle', 'hatch2_angle_randomness', 'hatch2_overshoot',
-            'hatch3_thresh', 'hatch3_angle', 'hatch3_angle_randomness', 'hatch3_overshoot'
+            'hatch1_thresh', 'hatch1_spacing', 'hatch1_angle', 'hatch1_angle_randomness', 'hatch1_overshoot',
+            'hatch2_thresh', 'hatch2_spacing', 'hatch2_angle', 'hatch2_angle_randomness', 'hatch2_overshoot',
+            'hatch3_thresh', 'hatch3_spacing', 'hatch3_angle', 'hatch3_angle_randomness', 'hatch3_overshoot'
         ];
 
         // UI Update Helpers
         function updateValue(id, val) {
             const display = document.getElementById(id + '_val');
             if (display) {
-                // Format overshoot values to 2 decimal places
-                if (id.includes('overshoot')) {
+                // Format overshoot and spacing values to 2 decimal places
+                if (id.includes('overshoot') || id.includes('spacing')) {
                     display.textContent = parseFloat(val).toFixed(2);
                 } else {
                     display.textContent = val;
@@ -1185,6 +1187,19 @@
                             strokeWidthEl.value = settingsData.edge_stroke;
                             updateValue('stroke_width', settingsData.edge_stroke);
                         }
+                    }
+                    
+                    // Handle backward compatibility: if old settings have hatch_spacing, apply to all layers
+                    if (settingsData.hatch_spacing !== undefined) {
+                        ['hatch1_spacing', 'hatch2_spacing', 'hatch3_spacing'].forEach(id => {
+                            if (settingsData[id] === undefined) {
+                                const el = document.getElementById(id);
+                                if (el) {
+                                    el.value = settingsData.hatch_spacing;
+                                    updateValue(id, settingsData.hatch_spacing);
+                                }
+                            }
+                        });
                     }
 
                     // Note: User must click Redraw to process after importing settings
