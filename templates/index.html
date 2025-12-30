@@ -39,10 +39,221 @@
         .container {
             width: 100%;
             height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            background: linear-gradient(180deg, var(--panel-bg) 0%, #131313 100%);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .toolbar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            text-shadow: 0 0 10px var(--accent-glow);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            margin: 0;
+            padding: 0;
+            flex-shrink: 0;
+            min-width: 264px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 0 0 auto;
+            flex-shrink: 0;
+            min-width: 0;
+        }
+
+        .toolbar-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            justify-content: flex-start;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 0 0 auto;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 32px;
+            background: var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .toolbar > .toolbar-divider:first-of-type {
+            margin-left: -16px;
+        }
+
+        .toolbar-file-wrapper {
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+            width: 140px;
+            min-width: 140px;
+            max-width: 140px;
+        }
+
+        .toolbar-file-input {
+            font-size: 0.75rem;
+            color: transparent;
+            background: var(--panel-bg);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            transition: all 0.2s;
+            cursor: pointer;
+            width: 140px !important;
+            min-width: 140px !important;
+            max-width: 140px !important;
+            position: relative;
+            flex-shrink: 0 !important;
+            /* Ensure input maintains size */
+            display: block;
+            height: 31px;
+            /* Hide text - method that works in Firefox */
+            text-indent: -9999px;
+            overflow: hidden;
+            /* Prevent Firefox from collapsing */
+            -moz-appearance: textfield;
+        }
+
+        .toolbar-file-input::-webkit-file-upload-button {
+            display: none;
+        }
+
+        /* Firefox - keep button but make it invisible */
+        .toolbar-file-input::-moz-file-upload-button {
+            opacity: 0.01;
+            cursor: pointer;
+        }
+
+        .toolbar-file-input:hover {
+            background: var(--panel-bg-hover);
+            border-color: var(--border-color-hover);
+        }
+
+        .toolbar-file-input::file-selector-button {
+            display: none;
+        }
+
+        .toolbar-file-label {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 0.75rem;
+            color: var(--text-color);
+            z-index: 1;
+            white-space: nowrap;
+            max-width: calc(100% - 24px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .toolbar-button {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
+        .toolbar-button:hover:not(:disabled) { 
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
+            box-shadow: var(--shadow-md), 0 0 12px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        .toolbar-button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toolbar-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--border-color);
+        }
+
+        .toolbar-button#resetViewBtn {
+            background: linear-gradient(135deg, #64748b, #94a3b8);
+        }
+        .toolbar-button#resetViewBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(100, 116, 139, 0.3);
+        }
+
+        .toolbar-button#saveSettingsBtn {
+            background: linear-gradient(135deg, #0891b2, #06b6d4);
+        }
+        .toolbar-button#saveSettingsBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            box-shadow: var(--shadow-md), 0 0 12px rgba(8, 145, 178, 0.3);
+        }
+
+        .toolbar-button#redrawBtn {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+        }
+        .toolbar-button#redrawBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
+            box-shadow: var(--shadow-md), 0 0 12px var(--accent-glow);
+        }
+
+        .toolbar-button#downloadBtn { 
+            background: linear-gradient(135deg, var(--success-color), #12c982);
+        }
+        .toolbar-button#downloadBtn:hover:not(:disabled) { 
+            background: linear-gradient(135deg, #12c982, var(--success-color));
+            box-shadow: var(--shadow-md), 0 0 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .toolbar-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .toolbar-time .value-display {
+            color: var(--accent-color);
+        }
+
+        .content-wrapper {
             display: grid;
             grid-template-columns: 280px 1fr;
             gap: 10px;
-            min-width: 0;
+            flex: 1;
+            min-height: 0;
             overflow: hidden;
         }
 
@@ -278,6 +489,7 @@
             background: var(--panel-bg-hover);
             border-color: var(--border-color-hover);
         }
+
 
         select {
             width: 100%; 
@@ -570,30 +782,37 @@
 </head>
 <body>
     <div class="container">
-        <div class="sidebar">
-            <h1>Hatcher v0.3</h1>
-
-            <!-- Controls -->
-            <div class="section-block">
-                <h3 class="section-header" data-section="controls">Controls</h3>
-                <div class="section-content" data-content="controls">
-                <input type="file" id="imageInput" accept="image/*" style="margin-bottom: 8px;">
-                
-                <div class="action-bar-row" style="margin-bottom: 8px;">
-                    <button id="importSettingsBtn" style="flex: 1;">Import Settings</button>
-                    <button id="exportSettingsBtn" style="flex: 1;">Export Settings</button>
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <h1 class="toolbar-title">Hatcher v0.3</h1>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-left">
+                <div class="toolbar-file-wrapper">
+                    <input type="file" id="imageInput" accept="image/*" class="toolbar-file-input" placeholder=" ">
+                    <span class="toolbar-file-label">Load File</span>
                 </div>
-                <div class="action-bar-row" style="margin-bottom: 8px;">
-                    <button id="redrawBtn" style="flex: 1;">Redraw</button>
-                    <button id="resetViewBtn" style="flex: 1;">Reset View</button>
-                </div>
-                <button id="downloadBtn" disabled style="width: 100%;">Save SVG</button>
-                <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); text-align: center;">
-                    Processed Time: <span id="processedTime" class="value-display" style="color: var(--accent-color);">-</span>
-                </div>
-                <input type="file" id="importFileInput" accept=".txt" style="display:none;">
+                <div class="toolbar-file-wrapper">
+                    <input type="file" id="importFileInput" accept=".txt" class="toolbar-file-input" placeholder=" ">
+                    <span class="toolbar-file-label">Load Settings</span>
                 </div>
             </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-center">
+                <button id="redrawBtn" class="toolbar-button">Redraw</button>
+                <button id="resetViewBtn" class="toolbar-button">Reset View</button>
+                <div class="toolbar-time">
+                    Processed Time: <span id="processedTime" class="value-display">-</span>
+                </div>
+            </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-right">
+                <button id="saveSettingsBtn" class="toolbar-button">Save Settings</button>
+                <button id="downloadBtn" class="toolbar-button" disabled>Save SVG</button>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="sidebar">
 
             <!-- Global Settings -->
             <div class="section-block">
@@ -960,6 +1179,18 @@
         // Upload
         document.getElementById('imageInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];
+            const label = e.target.parentElement.querySelector('.toolbar-file-label');
+            if (file && label) {
+                // Show filename in label, truncate if too long
+                const filename = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+                label.textContent = filename;
+                label.style.color = 'var(--accent-color)';
+            } else if (label) {
+                label.textContent = 'Load File';
+                label.style.color = 'var(--text-color)';
+            }
+            // Hide native file input text
+            e.target.style.textIndent = '-9999px';
             if (!file) return;
 
             const formData = new FormData();
@@ -1376,6 +1607,12 @@
 
         // Initialize zoom for all views
         document.addEventListener('DOMContentLoaded', () => {
+            // Hide file input native text
+            const fileInputs = document.querySelectorAll('.toolbar-file-input');
+            fileInputs.forEach(input => {
+                input.style.textIndent = '-9999px';
+            });
+            
             // Initialize collapsible sections
             initCollapsibleSections();
             
@@ -1398,25 +1635,40 @@
                 resetBtn.addEventListener('click', resetView);
             }
 
-            // Export settings button
-            const exportBtn = document.getElementById('exportSettingsBtn');
-            if (exportBtn) {
-                exportBtn.addEventListener('click', exportSettings);
+            // Save settings button (renamed from export)
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', exportSettings);
             }
 
-            // Import settings button
-            const importBtn = document.getElementById('importSettingsBtn');
+            // Load settings file input (renamed from import)
             const importFileInput = document.getElementById('importFileInput');
-            if (importBtn && importFileInput) {
-                importBtn.addEventListener('click', () => {
-                    importFileInput.click();
-                });
+            if (importFileInput) {
                 importFileInput.addEventListener('change', (e) => {
                     const file = e.target.files[0];
+                    const label = e.target.parentElement.querySelector('.toolbar-file-label');
+                    // Hide native file input text
+                    e.target.style.textIndent = '-9999px';
                     if (file) {
+                        if (label) {
+                            // Show filename in label, truncate if too long
+                            const filename = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+                            label.textContent = filename;
+                            label.style.color = 'var(--accent-color)';
+                        }
                         importSettings(file);
                         // Reset input so same file can be selected again
                         e.target.value = '';
+                        // Reset label after a short delay
+                        setTimeout(() => {
+                            if (label) {
+                                label.textContent = 'Load Settings';
+                                label.style.color = 'var(--text-color)';
+                            }
+                        }, 1000);
+                    } else if (label) {
+                        label.textContent = 'Load Settings';
+                        label.style.color = 'var(--text-color)';
                     }
                 });
             }
