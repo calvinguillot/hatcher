@@ -1089,7 +1089,7 @@
             controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'thresh', 'Threshold', 0, 255, 1, layerData.thresh));
             
             // Spacing (1 column)
-            controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'spacing', 'Spacing', 1.0, 20.0, 0.05, layerData.spacing));
+            controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'spacing', 'Spacing', 1.0, 50.0, 0.05, layerData.spacing));
             
             // Angle and Angle Rand (2 columns)
             const angleGrid = document.createElement('div');
@@ -1098,7 +1098,7 @@
             
             const angleItem = document.createElement('div');
             angleItem.className = 'control-item';
-            angleItem.appendChild(createControl(angleItem, layerIndex, 'angle', 'Angle', 0, 180, 1, layerData.angle));
+            angleItem.appendChild(createControl(angleItem, layerIndex, 'angle', 'Angle', 0, 180, 5, layerData.angle));
             angleGrid.appendChild(angleItem);
             
             const angleRandItem = document.createElement('div');
