@@ -35,20 +35,38 @@ def upload_file():
         file.save(filepath)
         return jsonify({'filename': filename, 'url': f"/static/uploads/{filename}"})
 
+def mm_to_pixels(mm, dpi):
+    """Convert millimeters to pixels at given DPI."""
+    return mm * dpi / 25.4
+
 @app.route('/process', methods=['POST'])
 def process_image():
     try:
         data = request.json
         filename = data.get('filename')
         
-        # Parameters
-        scale = float(data.get('scale', 0.5))
+        # Canvas settings
+        canvas_width_mm = float(data.get('canvas_width_mm', 210))
+        canvas_height_mm = float(data.get('canvas_height_mm', 297))
+        canvas_dpi = float(data.get('canvas_dpi', 96))
+        
+        # Convert canvas size to pixels
+        canvas_width_px = int(mm_to_pixels(canvas_width_mm, canvas_dpi))
+        canvas_height_px = int(mm_to_pixels(canvas_height_mm, canvas_dpi))
+        
+        # Image placement settings
+        scale = float(data.get('scale', 1.0))
+        image_x_mm = float(data.get('image_x_mm', 0))
+        image_y_mm = float(data.get('image_y_mm', 0))
+        image_x_px = int(mm_to_pixels(image_x_mm, canvas_dpi))
+        image_y_px = int(mm_to_pixels(image_y_mm, canvas_dpi))
+        
+        # Image adjustments
         brightness = float(data.get('brightness', 1.0))
         contrast = float(data.get('contrast', 1.0))
         
         # General settings
         hatch_stroke = float(data.get('hatch_stroke', 0.5))
-        hatch_spacing = float(data.get('hatch_spacing', 5.0))
         hatch_enabled = data.get('hatch_enabled', True)
         hatch_min_len = float(data.get('hatch_min_len', 0.0))
         hatch_smoothing = float(data.get('hatch_smoothing', 0.0))
@@ -72,28 +90,28 @@ def process_image():
         
         # Backward compatibility: convert old format to new format
         if not hatch_layers:
-            default_spacing = data.get('hatch_spacing', 5.0)
+            default_spacing_mm = 1.5  # Default spacing in mm
             hatch_layers = [
                 {
                     'thresh': int(data.get('hatch1_thresh', 200)),
                     'angle': int(data.get('hatch1_angle', 45)),
                     'angle_randomness': float(data.get('hatch1_angle_randomness', 0.0)),
                     'overshoot': float(data.get('hatch1_overshoot', 0.0)),
-                    'spacing': float(data.get('hatch1_spacing', default_spacing))
+                    'spacing': float(data.get('hatch1_spacing', default_spacing_mm))
                 },
                 {
                     'thresh': int(data.get('hatch2_thresh', 140)),
                     'angle': int(data.get('hatch2_angle', 135)),
                     'angle_randomness': float(data.get('hatch2_angle_randomness', 0.0)),
                     'overshoot': float(data.get('hatch2_overshoot', 0.0)),
-                    'spacing': float(data.get('hatch2_spacing', default_spacing))
+                    'spacing': float(data.get('hatch2_spacing', default_spacing_mm))
                 },
                 {
                     'thresh': int(data.get('hatch3_thresh', 80)),
                     'angle': int(data.get('hatch3_angle', 90)),
                     'angle_randomness': float(data.get('hatch3_angle_randomness', 0.0)),
                     'overshoot': float(data.get('hatch3_overshoot', 0.0)),
-                    'spacing': float(data.get('hatch3_spacing', default_spacing))
+                    'spacing': float(data.get('hatch3_spacing', default_spacing_mm))
                 }
             ]
         
@@ -110,7 +128,7 @@ def process_image():
         except Exception as e:
             return jsonify({'error': f"Failed to load image: {str(e)}"}), 500
 
-        # Resize if needed
+        # Scale the image
         if scale != 1.0:
             w = int(original_img.width * scale)
             h = int(original_img.height * scale)
@@ -126,8 +144,26 @@ def process_image():
             enhancer = ImageEnhance.Contrast(original_img)
             original_img = enhancer.enhance(contrast)
         
-        width, height = original_img.size
-        gray_img = original_img.convert("L")
+        # Create canvas with white background
+        canvas = Image.new('RGB', (canvas_width_px, canvas_height_px), (255, 255, 255))
+        
+        # Place image on canvas at specified position
+        # Handle negative positions and clipping
+        img_width, img_height = original_img.size
+        
+        # Calculate paste box (handles negative positions)
+        paste_x = image_x_px
+        paste_y = image_y_px
+        
+        # Paste image onto canvas (PIL handles clipping automatically)
+        if original_img.mode == 'RGBA':
+            canvas.paste(original_img, (paste_x, paste_y), original_img)
+        else:
+            canvas.paste(original_img, (paste_x, paste_y))
+        
+        # Use canvas dimensions for SVG
+        width, height = canvas_width_px, canvas_height_px
+        gray_img = canvas.convert("L")
         
         # Generate YOLO segmentation preview if requested
         segmentation_preview_b64 = None
@@ -137,10 +173,10 @@ def process_image():
                 from io import BytesIO
                 # Convert threshold to confidence
                 conf = max(0.001, min(1.0, edge_thresh / 255.0))
-                # Get segmentation mask
+                # Get segmentation mask from the canvas (gray_img is already the canvas)
                 edges, mask = stylize.yolo_segmentation(gray_img, conf=conf, return_mask=True)
                 # Create colored preview: convert mask to RGBA with colored overlay
-                # Use a semi-transparent color overlay on the original image
+                # Use a semi-transparent color overlay on the canvas
                 mask_rgba = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                 # Color the mask areas (e.g., green with 50% opacity)
                 mask_array = np.array(mask)
@@ -186,9 +222,13 @@ def process_image():
             
             # Process each layer dynamically
             for i, layer in enumerate(hatch_layers):
+                # Convert spacing from mm to pixels
+                spacing_mm = float(layer.get('spacing', 1.5))
+                spacing_px = mm_to_pixels(spacing_mm, canvas_dpi)
+                
                 hatch = stylize.generate_hatch_lines(dwg, gray_img, width, height, 
                                             angle_deg=int(layer.get('angle', 45)), 
-                                            spacing=float(layer.get('spacing', 5.0)), 
+                                            spacing=spacing_px, 
                                             threshold=int(layer.get('thresh', 200)), 
                                             stroke_width=hatch_stroke, 
                                             min_len=hatch_min_len, 

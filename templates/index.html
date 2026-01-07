@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hatcher v0.4.2</title>
+    <title>Hatcher v0.5.0</title>
     <style>
         :root {
             --bg-color: #0a0a0a;
@@ -436,6 +436,24 @@
             box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
         }
 
+        .center-image-btn {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            color: #fff;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .center-image-btn:hover {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+        }
+
         input[type="range"] {
             width: 100%;
             height: 6px;
@@ -582,10 +600,33 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 5px;
+            padding: 10px;
             position: relative;
             background: #ffffff;
             cursor: grab;
+        }
+
+        /* Only Original view has grey background to show canvas */
+        #viewOriginal {
+            background: #6b6b6b;
+        }
+
+        #originalImage {
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+        .canvas-area {
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .svg-canvas {
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
 
         .view-content:active {
@@ -784,7 +825,7 @@
     <div class="container">
         <!-- Toolbar -->
         <div class="toolbar">
-            <h1 class="toolbar-title">Hatcher v0.4.2</h1>
+            <h1 class="toolbar-title">Hatcher v0.5.0</h1>
             <div class="toolbar-divider"></div>
             <div class="toolbar-left">
                 <div class="toolbar-file-wrapper">
@@ -814,15 +855,54 @@
         <div class="content-wrapper">
             <div class="sidebar">
 
-            <!-- Global Settings -->
+            <!-- Canvas Settings -->
             <div class="section-block">
-                <h3 class="section-header" data-section="global">Global Settings</h3>
-                <div class="section-content" data-content="global">
+                <h3 class="section-header" data-section="canvas">Canvas Settings</h3>
+                <div class="section-content" data-content="canvas">
+                <div class="grid-2">
+                    <div class="control-item">
+                        <div class="control-row"><label>Width (mm)</label><span id="canvas_width_mm_val" class="value-display">210</span></div>
+                        <input type="range" id="canvas_width_mm" min="10" max="1000" step="1" value="210" title="Canvas width in millimeters (A4 = 210mm)">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-row"><label>Height (mm)</label><span id="canvas_height_mm_val" class="value-display">297</span></div>
+                        <input type="range" id="canvas_height_mm" min="10" max="1000" step="1" value="297" title="Canvas height in millimeters (A4 = 297mm)">
+                    </div>
+                </div>
+                <div class="control-item" style="margin-top: 8px;">
+                    <div class="control-row"><label>DPI</label><span id="canvas_dpi_val" class="value-display">96</span></div>
+                    <input type="range" id="canvas_dpi" min="72" max="300" step="1" value="96" title="Dots per inch (96 is standard screen, 300 for print)">
+                </div>
+                </div>
+            </div>
+
+            <!-- Image Placement -->
+            <div class="section-block">
+                <h3 class="section-header" data-section="placement">Image Placement</h3>
+                <div class="section-content" data-content="placement">
                 <div class="control-item">
-                    <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">0.5</span></div>
-                    <input type="range" id="scale" min="0.1" max="1.5" step="0.05" value="0.5">
+                    <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">1.0</span></div>
+                    <input type="range" id="scale" min="0.1" max="3.0" step="0.05" value="1.0" title="Image scale factor">
                 </div>
                 <div class="grid-2" style="margin-top: 8px;">
+                    <div class="control-item">
+                        <div class="control-row"><label>X Position (mm)</label><span id="image_x_mm_val" class="value-display">0</span></div>
+                        <input type="range" id="image_x_mm" min="-2000" max="2000" step="1" value="0" title="Image X position in millimeters">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-row"><label>Y Position (mm)</label><span id="image_y_mm_val" class="value-display">0</span></div>
+                        <input type="range" id="image_y_mm" min="-2000" max="2000" step="1" value="0" title="Image Y position in millimeters">
+                    </div>
+                </div>
+                <button id="centerImageBtn" class="center-image-btn" style="margin-top: 8px;">Center Image</button>
+                </div>
+            </div>
+
+            <!-- Global Settings -->
+            <div class="section-block">
+                <h3 class="section-header" data-section="global">Image Adjustments</h3>
+                <div class="section-content" data-content="global">
+                <div class="grid-2">
                     <div class="control-item">
                         <div class="control-row"><label>Brightness</label><span id="brightness_val" class="value-display">1.0</span></div>
                         <input type="range" id="brightness" min="0.0" max="2.0" step="0.05" value="1.0" title="Image brightness adjustment (1.0 = original)">
@@ -951,7 +1031,11 @@
                 <div class="view-panel">
                     <div class="view-header">Original</div>
                     <div class="view-content" id="viewOriginal">
-                        <div class="view-inner" id="viewOriginalInner"></div>
+                        <div class="view-inner" id="viewOriginalInner">
+                            <div class="canvas-area" id="canvasArea">
+                                <img id="originalImage" style="position: absolute; display: none;">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="view-panel">
@@ -980,15 +1064,22 @@
         let currentFilename = null;
         let isProcessing = false;
         let pendingUpdate = false;
+        let originalImageWidth = 0;
+        let originalImageHeight = 0;
+        
+        // Hatching layers with spacing in mm (default 1.5mm)
         let hatchLayers = [
-            { thresh: 200, spacing: 5.0, angle: 45, angle_randomness: 0, overshoot: 0 },
-            { thresh: 140, spacing: 5.0, angle: 135, angle_randomness: 0, overshoot: 0 },
-            { thresh: 80, spacing: 5.0, angle: 90, angle_randomness: 0, overshoot: 0 }
+            { thresh: 200, spacing: 1.5, angle: 45, angle_randomness: 0, overshoot: 0 },
+            { thresh: 140, spacing: 1.5, angle: 135, angle_randomness: 0, overshoot: 0 },
+            { thresh: 80, spacing: 1.5, angle: 90, angle_randomness: 0, overshoot: 0 }
         ];
 
         // Settings Map (excluding dynamic layers)
         const settings = [
-            'scale', 'brightness', 'contrast', 'stroke_width', 'hatch_enabled', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
+            'canvas_width_mm', 'canvas_height_mm', 'canvas_dpi',
+            'scale', 'image_x_mm', 'image_y_mm',
+            'brightness', 'contrast', 'stroke_width', 
+            'hatch_enabled', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
             'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview'
         ];
 
@@ -1088,8 +1179,8 @@
             // Threshold (1 column)
             controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'thresh', 'Threshold', 0, 255, 1, layerData.thresh));
             
-            // Spacing (1 column)
-            controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'spacing', 'Spacing', 1.0, 50.0, 0.05, layerData.spacing));
+            // Spacing in mm (1 column)
+            controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'spacing', 'Spacing (mm)', 0.5, 10.0, 0.1, layerData.spacing));
             
             // Angle and Angle Rand (2 columns)
             const angleGrid = document.createElement('div');
@@ -1130,7 +1221,7 @@
         function addLayer() {
             hatchLayers.push({
                 thresh: 128,
-                spacing: 5.0,
+                spacing: 1.5,
                 angle: 90,
                 angle_randomness: 0,
                 overshoot: 0
@@ -1176,7 +1267,124 @@
         // Initialize YOLO preview visibility
         updateYOLOPreviewVisibility();
 
-        // Upload
+        // Convert mm to pixels based on DPI
+        function mmToPixels(mm) {
+            const dpi = parseFloat(document.getElementById('canvas_dpi').value) || 96;
+            return mm * dpi / 25.4;
+        }
+
+        // Convert pixels to mm based on DPI
+        function pixelsToMm(pixels) {
+            const dpi = parseFloat(document.getElementById('canvas_dpi').value) || 96;
+            return pixels * 25.4 / dpi;
+        }
+
+        // Update canvas area display in Original view
+        function updateCanvasPreview() {
+            const canvasWidthMm = parseFloat(document.getElementById('canvas_width_mm').value) || 210;
+            const canvasHeightMm = parseFloat(document.getElementById('canvas_height_mm').value) || 297;
+            const dpi = parseFloat(document.getElementById('canvas_dpi').value) || 96;
+            
+            // Calculate canvas size in pixels
+            const canvasWidthPx = mmToPixels(canvasWidthMm);
+            const canvasHeightPx = mmToPixels(canvasHeightMm);
+            
+            // Get the view container to calculate display scale
+            const viewContent = document.getElementById('viewOriginal');
+            const viewRect = viewContent.getBoundingClientRect();
+            const padding = 20;
+            const availableWidth = viewRect.width - padding * 2;
+            const availableHeight = viewRect.height - padding * 2;
+            
+            // Calculate scale to fit canvas in view
+            const scaleX = availableWidth / canvasWidthPx;
+            const scaleY = availableHeight / canvasHeightPx;
+            const displayScale = Math.min(scaleX, scaleY, 1);
+            
+            // Apply to canvas area
+            const canvasArea = document.getElementById('canvasArea');
+            canvasArea.style.width = (canvasWidthPx * displayScale) + 'px';
+            canvasArea.style.height = (canvasHeightPx * displayScale) + 'px';
+            
+            // Update image position if loaded
+            updateImagePosition(displayScale, canvasWidthPx, canvasHeightPx);
+        }
+
+        // Update image position within canvas
+        function updateImagePosition(displayScale, canvasWidthPx, canvasHeightPx) {
+            const img = document.getElementById('originalImage');
+            if (!img || !img.src || originalImageWidth === 0) return;
+            
+            const scale = parseFloat(document.getElementById('scale').value) || 1.0;
+            const imageXMm = parseFloat(document.getElementById('image_x_mm').value) || 0;
+            const imageYMm = parseFloat(document.getElementById('image_y_mm').value) || 0;
+            
+            // Image dimensions after scaling (in canvas pixels)
+            const scaledWidth = originalImageWidth * scale;
+            const scaledHeight = originalImageHeight * scale;
+            
+            // Position in canvas pixels
+            const imageXPx = mmToPixels(imageXMm);
+            const imageYPx = mmToPixels(imageYMm);
+            
+            // Display dimensions
+            if (!displayScale) {
+                const viewContent = document.getElementById('viewOriginal');
+                const viewRect = viewContent.getBoundingClientRect();
+                const padding = 20;
+                const canvasWidthMm = parseFloat(document.getElementById('canvas_width_mm').value) || 210;
+                const canvasHeightMm = parseFloat(document.getElementById('canvas_height_mm').value) || 297;
+                canvasWidthPx = mmToPixels(canvasWidthMm);
+                canvasHeightPx = mmToPixels(canvasHeightMm);
+                const availableWidth = viewRect.width - padding * 2;
+                const availableHeight = viewRect.height - padding * 2;
+                const scaleX = availableWidth / canvasWidthPx;
+                const scaleY = availableHeight / canvasHeightPx;
+                displayScale = Math.min(scaleX, scaleY, 1);
+            }
+            
+            // Apply to image
+            img.style.width = (scaledWidth * displayScale) + 'px';
+            img.style.height = (scaledHeight * displayScale) + 'px';
+            img.style.left = (imageXPx * displayScale) + 'px';
+            img.style.top = (imageYPx * displayScale) + 'px';
+            img.style.display = 'block';
+        }
+
+        // Center image on canvas
+        function centerImage() {
+            if (originalImageWidth === 0 || originalImageHeight === 0) return;
+            
+            const canvasWidthMm = parseFloat(document.getElementById('canvas_width_mm').value) || 210;
+            const canvasHeightMm = parseFloat(document.getElementById('canvas_height_mm').value) || 297;
+            const scale = parseFloat(document.getElementById('scale').value) || 1.0;
+            
+            // Canvas size in pixels
+            const canvasWidthPx = mmToPixels(canvasWidthMm);
+            const canvasHeightPx = mmToPixels(canvasHeightMm);
+            
+            // Scaled image size in pixels
+            const scaledWidth = originalImageWidth * scale;
+            const scaledHeight = originalImageHeight * scale;
+            
+            // Center position in pixels
+            const centerXPx = (canvasWidthPx - scaledWidth) / 2;
+            const centerYPx = (canvasHeightPx - scaledHeight) / 2;
+            
+            // Convert to mm
+            const centerXMm = pixelsToMm(centerXPx);
+            const centerYMm = pixelsToMm(centerYPx);
+            
+            // Update sliders
+            document.getElementById('image_x_mm').value = Math.round(centerXMm);
+            document.getElementById('image_y_mm').value = Math.round(centerYMm);
+            updateValue('image_x_mm', Math.round(centerXMm));
+            updateValue('image_y_mm', Math.round(centerYMm));
+            
+            updateCanvasPreview();
+        }
+
+        // Upload - no auto-processing
         document.getElementById('imageInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             const label = e.target.parentElement.querySelector('.toolbar-file-label');
@@ -1204,19 +1412,19 @@
                 
                 currentFilename = data.filename;
                 
-                const img = document.createElement('img');
-                img.src = data.url;
-                // Let CSS handle sizing - don't set width/height to 100% as it breaks aspect ratio
-                const originalInner = document.getElementById('viewOriginalInner');
-                originalInner.innerHTML = '';
-                originalInner.appendChild(img);
-                
-                // Ensure image loads and fits properly
+                // Set up image in canvas
+                const img = document.getElementById('originalImage');
                 img.onload = () => {
-                    // Image will be constrained by CSS max-width/max-height
+                    originalImageWidth = img.naturalWidth;
+                    originalImageHeight = img.naturalHeight;
+                    // Auto-center on first load (with small delay to ensure view is rendered)
+                    setTimeout(() => {
+                        centerImage();
+                    }, 50);
                 };
+                img.src = data.url;
                 
-                processImage();
+                // Do NOT auto-process - user must click Redraw
                 
             } catch (err) {
                 alert('Upload failed: ' + err.message);
@@ -1267,14 +1475,37 @@
                 const svgRes = await fetch(data.url);
                 const svgText = await svgRes.text();
                 
-                const setContent = (id, innerId, html) => {
+                // Get canvas dimensions for SVG sizing
+                const canvasWidthMm = parseFloat(document.getElementById('canvas_width_mm').value) || 210;
+                const canvasHeightMm = parseFloat(document.getElementById('canvas_height_mm').value) || 297;
+                const canvasWidthPx = mmToPixels(canvasWidthMm);
+                const canvasHeightPx = mmToPixels(canvasHeightMm);
+                
+                const setContent = (viewId, innerId, html) => {
+                    const viewContent = document.getElementById(viewId);
                     const innerEl = document.getElementById(innerId);
-                    innerEl.innerHTML = html;
+                    const viewRect = viewContent.getBoundingClientRect();
+                    const padding = 20;
+                    const availableWidth = viewRect.width - padding * 2;
+                    const availableHeight = viewRect.height - padding * 2;
+                    
+                    // Calculate scale to fit canvas in view (same as Original view)
+                    const scaleX = availableWidth / canvasWidthPx;
+                    const scaleY = availableHeight / canvasHeightPx;
+                    const displayScale = Math.min(scaleX, scaleY, 1);
+                    
+                    // Create a wrapper div to match canvas-area sizing
+                    const displayWidth = canvasWidthPx * displayScale;
+                    const displayHeight = canvasHeightPx * displayScale;
+                    
+                    innerEl.innerHTML = `<div class="svg-canvas" style="width: ${displayWidth}px; height: ${displayHeight}px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">${html}</div>`;
+                    
                     const svg = innerEl.querySelector('svg');
                     if (svg) {
                         svg.setAttribute('width', '100%');
                         svg.setAttribute('height', '100%');
                         svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                        svg.style.display = 'block';
                     }
                 };
 
@@ -1551,29 +1782,42 @@
                     
                     // Handle dynamic layers
                     if (settingsData.hatch_layers && Array.isArray(settingsData.hatch_layers)) {
-                        hatchLayers = settingsData.hatch_layers;
+                        // Check if old pixel-based spacing (values > 10 are likely pixels, not mm)
+                        hatchLayers = settingsData.hatch_layers.map(layer => {
+                            let spacing = parseFloat(layer.spacing) || 1.5;
+                            // Convert old pixel values to mm (assume 96 DPI if spacing > 10)
+                            if (spacing > 10) {
+                                spacing = spacing * 25.4 / 96;  // pixels to mm at 96 DPI
+                            }
+                            return {
+                                ...layer,
+                                spacing: spacing
+                            };
+                        });
                         renderLayers();
                     } else {
                         // Backward compatibility: convert old format to new format
                         const defaultSpacing = settingsData.hatch_spacing || 5.0;
+                        // Convert old pixel spacing to mm (assume 96 DPI)
+                        const toMm = (px) => px > 10 ? px * 25.4 / 96 : px;
                         hatchLayers = [
                             {
                                 thresh: settingsData.hatch1_thresh !== undefined ? parseInt(settingsData.hatch1_thresh) : 200,
-                                spacing: settingsData.hatch1_spacing !== undefined ? parseFloat(settingsData.hatch1_spacing) : defaultSpacing,
+                                spacing: toMm(settingsData.hatch1_spacing !== undefined ? parseFloat(settingsData.hatch1_spacing) : defaultSpacing),
                                 angle: settingsData.hatch1_angle !== undefined ? parseInt(settingsData.hatch1_angle) : 45,
                                 angle_randomness: settingsData.hatch1_angle_randomness !== undefined ? parseFloat(settingsData.hatch1_angle_randomness) : 0,
                                 overshoot: settingsData.hatch1_overshoot !== undefined ? parseFloat(settingsData.hatch1_overshoot) : 0
                             },
                             {
                                 thresh: settingsData.hatch2_thresh !== undefined ? parseInt(settingsData.hatch2_thresh) : 140,
-                                spacing: settingsData.hatch2_spacing !== undefined ? parseFloat(settingsData.hatch2_spacing) : defaultSpacing,
+                                spacing: toMm(settingsData.hatch2_spacing !== undefined ? parseFloat(settingsData.hatch2_spacing) : defaultSpacing),
                                 angle: settingsData.hatch2_angle !== undefined ? parseInt(settingsData.hatch2_angle) : 135,
                                 angle_randomness: settingsData.hatch2_angle_randomness !== undefined ? parseFloat(settingsData.hatch2_angle_randomness) : 0,
                                 overshoot: settingsData.hatch2_overshoot !== undefined ? parseFloat(settingsData.hatch2_overshoot) : 0
                             },
                             {
                                 thresh: settingsData.hatch3_thresh !== undefined ? parseInt(settingsData.hatch3_thresh) : 80,
-                                spacing: settingsData.hatch3_spacing !== undefined ? parseFloat(settingsData.hatch3_spacing) : defaultSpacing,
+                                spacing: toMm(settingsData.hatch3_spacing !== undefined ? parseFloat(settingsData.hatch3_spacing) : defaultSpacing),
                                 angle: settingsData.hatch3_angle !== undefined ? parseInt(settingsData.hatch3_angle) : 90,
                                 angle_randomness: settingsData.hatch3_angle_randomness !== undefined ? parseFloat(settingsData.hatch3_angle_randomness) : 0,
                                 overshoot: settingsData.hatch3_overshoot !== undefined ? parseFloat(settingsData.hatch3_overshoot) : 0
@@ -1582,6 +1826,11 @@
                         renderLayers();
                     }
 
+                    // Update canvas preview after importing settings
+                    setTimeout(() => {
+                        updateCanvasPreview();
+                    }, 100);
+                    
                     // Note: User must click Redraw to process after importing settings
                 } catch (err) {
                     alert('Failed to import settings: ' + err.message);
@@ -1690,6 +1939,42 @@
             if (dlBtn) {
                 dlBtn.disabled = true;
             }
+
+            // Center image button
+            const centerBtn = document.getElementById('centerImageBtn');
+            if (centerBtn) {
+                centerBtn.addEventListener('click', centerImage);
+            }
+
+            // Canvas settings update preview
+            ['canvas_width_mm', 'canvas_height_mm', 'canvas_dpi'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => {
+                        updateValue(id, el.value);
+                        updateCanvasPreview();
+                    });
+                }
+            });
+
+            // Image placement settings update preview
+            ['scale', 'image_x_mm', 'image_y_mm'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => {
+                        updateValue(id, el.value);
+                        updateCanvasPreview();
+                    });
+                }
+            });
+
+            // Initial canvas preview
+            updateCanvasPreview();
+
+            // Update canvas preview on window resize
+            window.addEventListener('resize', () => {
+                updateCanvasPreview();
+            });
         });
     </script>
 </body>
