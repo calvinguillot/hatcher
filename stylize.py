@@ -1049,10 +1049,27 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
 
         return segments_local
 
+    # Special handling for maximum smoothing (straight lines) to preserve connections
+    render_smoothing = smoothing
+    if smoothing >= 0.99:
+        # Simplify segments to start/end points before joining
+        # This ensures we get straight hatch lines but keep the corners/connections
+        simplified = []
+        for seg in segments:
+            if len(seg) >= 2:
+                simplified.append([seg[0], seg[-1]])
+            else:
+                simplified.append(seg)
+        segments = simplified
+        
+        # Force render smoothing to 0 to draw the polyline (corners preserved)
+        # instead of flattening the entire joined path to a single line
+        render_smoothing = 0.0
+
     segments = join_segments_grid(segments, join_ends_radius)
 
     for segment in segments:
-        path_data = smooth_path_segment(segment, smoothing=smoothing, method=smooth_method)
+        path_data = smooth_path_segment(segment, smoothing=render_smoothing, method=smooth_method)
         if path_data:
             group.add(dwg.path(d=path_data))
 

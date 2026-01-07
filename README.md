@@ -41,25 +41,32 @@
 1. Clone or download this repository
 
 2. Create a virtual environment (recommended):
+
    ```bash
    python -m venv venv
    ```
 
 3. Activate the virtual environment:
    - **Windows (PowerShell):**
+
      ```powershell
      venv\Scripts\Activate.ps1
      ```
+
    - **Windows (Command Prompt):**
+
      ```cmd
      venv\Scripts\activate.bat
      ```
+
    - **Linux/Mac:**
+  
      ```bash
      source venv/bin/activate
      ```
 
 4. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -75,12 +82,14 @@
 1. Activate your virtual environment (if not already active)
 
 2. Run the Flask application:
+
    ```bash
    python app.py
    ```
 
 3. Open your web browser and navigate to:
-   ```
+
+   ```bash
    http://localhost:5000
    ```
 
@@ -101,7 +110,7 @@
 
 ## Project Structure
 
-```
+```bash
 hatcher/
 ├── app.py                 # Flask web application
 ├── stylize.py             # Image processing and SVG generation
@@ -133,6 +142,7 @@ hatcher/
 ### Converting SVG to Gcode
 
 You'll need to use a tool to convert the generated SVG to Gcode. Popular options include:
+
 - Inkscape with Gcode extensions
 - Universal Gcode Sender
 - Custom conversion scripts
@@ -142,6 +152,7 @@ You'll need to use a tool to convert the generated SVG to Gcode. Popular options
 ### Canvas Presets
 
 The application includes presets for:
+
 - Standard paper sizes: A4, A3, A2, A1
 - F-series sizes: F1 through F30
 
@@ -158,6 +169,7 @@ Custom presets can be added by editing `static/models/canvas_presets.json`.
 ### Hatching Layers
 
 Each hatching layer can be configured with:
+
 - **Threshold**: Brightness threshold (0-255, lower = darker areas)
 - **Spacing**: Distance between lines in millimeters
 - **Angle**: Line angle in degrees (0-180)
@@ -180,7 +192,7 @@ Each hatching layer can be configured with:
 
 ## Version
 
-Current version: **v0.6.1**
+Current version: **v0.6.2**
 
 ## License
 
