@@ -195,7 +195,8 @@ def process_image():
                 traceback.print_exc()
         
         # Create SVG
-        dwg = svgwrite.Drawing(output_path, size=(width, height), profile='tiny')
+        # Use physical dimensions for the SVG size to ensure proper scaling in editors/viewers
+        dwg = svgwrite.Drawing(output_path, size=(f"{canvas_width_mm}mm", f"{canvas_height_mm}mm"), profile='tiny')
         dwg.viewbox(0, 0, width, height)
         
         # 1. Edge Layer

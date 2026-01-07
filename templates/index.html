@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hatcher v0.5.0</title>
+    <title>Hatcher v0.6.1</title>
     <style>
         :root {
             --bg-color: #0a0a0a;
@@ -206,10 +206,12 @@
             background: var(--border-color);
         }
 
-        .toolbar-button#resetViewBtn {
+        .toolbar-button#resetViewBtn,
+        .toolbar-button#swapDimensionsBtn {
             background: linear-gradient(135deg, #64748b, #94a3b8);
         }
-        .toolbar-button#resetViewBtn:hover:not(:disabled) {
+        .toolbar-button#resetViewBtn:hover:not(:disabled),
+        .toolbar-button#swapDimensionsBtn:hover:not(:disabled) {
             background: linear-gradient(135deg, #94a3b8, #64748b);
             box-shadow: var(--shadow-md), 0 0 12px rgba(100, 116, 139, 0.3);
         }
@@ -437,7 +439,7 @@
         }
 
         .center-image-btn {
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #64748b, #94a3b8);
             color: #fff;
             border: none;
             padding: 8px;
@@ -450,8 +452,8 @@
         }
 
         .center-image-btn:hover {
-            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
-            box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            box-shadow: 0 0 12px rgba(100, 116, 139, 0.3);
         }
 
         input[type="range"] {
@@ -825,7 +827,7 @@
     <div class="container">
         <!-- Toolbar -->
         <div class="toolbar">
-            <h1 class="toolbar-title">Hatcher v0.5.0</h1>
+            <h1 class="toolbar-title">Hatcher v0.6.1</h1>
             <div class="toolbar-divider"></div>
             <div class="toolbar-left">
                 <div class="toolbar-file-wrapper">
@@ -859,6 +861,14 @@
             <div class="section-block">
                 <h3 class="section-header" data-section="canvas">Canvas Settings</h3>
                 <div class="section-content" data-content="canvas">
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; margin-bottom: 4px;">Preset Size</label>
+                    <select id="canvas_preset">
+                        <option value="">Select a preset...</option>
+                    </select>
+                </div>
+
                 <div class="grid-2">
                     <div class="control-item">
                         <div class="control-row"><label>Width (mm)</label><span id="canvas_width_mm_val" class="value-display">210</span></div>
@@ -869,6 +879,7 @@
                         <input type="range" id="canvas_height_mm" min="10" max="1000" step="1" value="297" title="Canvas height in millimeters (A4 = 297mm)">
                     </div>
                 </div>
+                <button id="swapDimensionsBtn" class="toolbar-button" style="width: 100%; margin-top: 8px;">Swap Landscape/Portrait</button>
                 <div class="control-item" style="margin-top: 8px;">
                     <div class="control-row"><label>DPI</label><span id="canvas_dpi_val" class="value-display">96</span></div>
                     <input type="range" id="canvas_dpi" min="72" max="300" step="1" value="96" title="Dots per inch (96 is standard screen, 300 for print)">
@@ -882,7 +893,7 @@
                 <div class="section-content" data-content="placement">
                 <div class="control-item">
                     <div class="control-row"><label>Scale</label><span id="scale_val" class="value-display">1.0</span></div>
-                    <input type="range" id="scale" min="0.1" max="3.0" step="0.05" value="1.0" title="Image scale factor">
+                    <input type="range" id="scale" min="0.1" max="3.0" step="0.01" value="1.0" title="Image scale factor">
                 </div>
                 <div class="grid-2" style="margin-top: 8px;">
                     <div class="control-item">
@@ -950,6 +961,10 @@
                 <div class="control-row"><label>Threshold</label><span id="edge_thresh_val" class="value-display">50</span></div>
                 <input type="range" id="edge_thresh" min="0" max="255" value="50">
             </div>
+            <div class="control-item" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <div class="control-row"><label>Join Radius</label><span id="edge_join_radius_val" class="value-display">5</span></div>
+                <input type="range" id="edge_join_radius" min="0" max="50" step="1" value="5" title="Join nearby edge paths if their endpoints are within this radius (px). Set to 0 to disable.">
+            </div>
             <div style="margin-bottom:8px;">
                 <select id="edge_smooth_method">
                     <option value="bezier">Bezier (Default)</option>
@@ -957,10 +972,6 @@
                     <option value="hermite">Hermite</option>
                     <option value="sliding">Sliding Average</option>
                 </select>
-            </div>
-            <div class="control-item" style="margin-top: 8px;">
-                <div class="control-row"><label>Join Radius</label><span id="edge_join_radius_val" class="value-display">5</span></div>
-                <input type="range" id="edge_join_radius" min="0" max="50" step="1" value="5" title="Join nearby edge paths if their endpoints are within this radius (px). Set to 0 to disable.">
             </div>
             <div class="grid-2">
                 <div class="control-item">
@@ -979,11 +990,15 @@
             <div class="section-block">
                 <h3 class="section-header" data-section="hatching">Hatching</h3>
                 <div class="section-content" data-content="hatching">
-            <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+            <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 4px; padding-bottom: 4px;">
                 <label for="hatch_enabled" style="cursor:pointer">Enable Hatching</label>
                 <input type="checkbox" id="hatch_enabled" checked>
             </div>
-            <div class="control-item" style="margin-top: 8px;">
+            <div class="control-item" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                <label for="spacing_override" style="cursor: pointer;">Override Spacing</label>
+                <input type="checkbox" id="spacing_override">
+            </div>
+            <div class="control-item" style="margin-top: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
                 <div class="control-row"><label>Join Ends</label><span id="hatch_join_ends_val" class="value-display">0</span></div>
                 <input type="range" id="hatch_join_ends" min="0" max="50" step="1" value="0" title="Join adjacent hatch segments into a single zig-zag path when their endpoints are within this radius (px). 0 disables joining.">
             </div>
@@ -1080,7 +1095,8 @@
             'scale', 'image_x_mm', 'image_y_mm',
             'brightness', 'contrast', 'stroke_width', 
             'hatch_enabled', 'hatch_min_len', 'hatch_smoothing', 'hatch_smooth_method', 'hatch_join_ends',
-            'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview'
+            'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
+            'spacing_override'
         ];
 
         // UI Update Helpers
@@ -1136,6 +1152,26 @@
                 const val = e.target.value;
                 updateValue(`layer${layerIndex}_${prop}`, val);
                 hatchLayers[layerIndex][prop] = parseFloat(val);
+
+                // Handle Spacing Override
+                if (prop === 'spacing') {
+                    const override = document.getElementById('spacing_override');
+                    if (override && override.checked) {
+                        const newVal = parseFloat(val);
+                        // Update all other layers
+                        hatchLayers.forEach((layer, idx) => {
+                            if (idx !== layerIndex) {
+                                layer.spacing = newVal;
+                                // Update slider and display if they exist
+                                const otherSlider = document.getElementById(`layer${idx}_spacing`);
+                                if (otherSlider) {
+                                    otherSlider.value = val;
+                                }
+                                updateValue(`layer${idx}_spacing`, val);
+                            }
+                        });
+                    }
+                }
             });
             
             controlItem.appendChild(controlRow);
@@ -1908,13 +1944,6 @@
                         importSettings(file);
                         // Reset input so same file can be selected again
                         e.target.value = '';
-                        // Reset label after a short delay
-                        setTimeout(() => {
-                            if (label) {
-                                label.textContent = 'Load Settings';
-                                label.style.color = 'var(--text-color)';
-                            }
-                        }, 1000);
                     } else if (label) {
                         label.textContent = 'Load Settings';
                         label.style.color = 'var(--text-color)';
@@ -1946,6 +1975,28 @@
                 centerBtn.addEventListener('click', centerImage);
             }
 
+            // Swap Dimensions Button
+            const swapBtn = document.getElementById('swapDimensionsBtn');
+            if (swapBtn) {
+                swapBtn.addEventListener('click', () => {
+                    const widthEl = document.getElementById('canvas_width_mm');
+                    const heightEl = document.getElementById('canvas_height_mm');
+                    
+                    if (widthEl && heightEl) {
+                        const currentWidth = widthEl.value;
+                        const currentHeight = heightEl.value;
+                        
+                        widthEl.value = currentHeight;
+                        heightEl.value = currentWidth;
+                        
+                        updateValue('canvas_width_mm', currentHeight);
+                        updateValue('canvas_height_mm', currentWidth);
+                        
+                        updateCanvasPreview();
+                    }
+                });
+            }
+
             // Canvas settings update preview
             ['canvas_width_mm', 'canvas_height_mm', 'canvas_dpi'].forEach(id => {
                 const el = document.getElementById(id);
@@ -1970,6 +2021,49 @@
 
             // Initial canvas preview
             updateCanvasPreview();
+
+            // Load Canvas Presets
+            fetch('/static/models/canvas_presets.json')
+                .then(response => {
+                    if (!response.ok) throw new Error("Presets not found");
+                    return response.json();
+                })
+                .then(presets => {
+                    const presetSelect = document.getElementById('canvas_preset');
+                    if (presetSelect) {
+                        presets.forEach(preset => {
+                            const option = document.createElement('option');
+                            option.value = JSON.stringify(preset);
+                            option.textContent = preset.name;
+                            presetSelect.appendChild(option);
+                        });
+
+                        presetSelect.addEventListener('change', (e) => {
+                            if (e.target.value) {
+                                const preset = JSON.parse(e.target.value);
+                                
+                                const widthEl = document.getElementById('canvas_width_mm');
+                                const heightEl = document.getElementById('canvas_height_mm');
+                                const dpiEl = document.getElementById('canvas_dpi');
+
+                                if (widthEl) {
+                                    widthEl.value = preset.width;
+                                    updateValue('canvas_width_mm', preset.width);
+                                }
+                                if (heightEl) {
+                                    heightEl.value = preset.height;
+                                    updateValue('canvas_height_mm', preset.height);
+                                }
+                                if (dpiEl && preset.dpi) {
+                                    dpiEl.value = preset.dpi;
+                                    updateValue('canvas_dpi', preset.dpi);
+                                }
+                                updateCanvasPreview();
+                            }
+                        });
+                    }
+                })
+                .catch(err => console.log('Canvas presets not loaded:', err));
 
             // Update canvas preview on window resize
             window.addEventListener('resize', () => {
