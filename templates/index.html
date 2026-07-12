@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hatcher v0.6.2</title>
+    <title>Hatcher v0.7.1</title>
     <link rel="icon" type="image/x-icon" href="/static/calvin_surf.ico">
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -11,7 +11,7 @@
     <div class="container">
         <!-- Toolbar -->
         <div class="toolbar">
-            <h1 class="toolbar-title">Hatcher v0.6.2</h1>
+            <h1 class="toolbar-title">Hatcher v0.7.1</h1>
             <div class="toolbar-divider"></div>
             <div class="toolbar-left">
                 <div class="toolbar-file-wrapper">
@@ -33,6 +33,8 @@
             </div>
             <div class="toolbar-divider"></div>
             <div class="toolbar-right">
+                <button id="undoSettingsBtn" class="toolbar-button" disabled>Undo</button>
+                <button id="redoSettingsBtn" class="toolbar-button" disabled>Redo</button>
                 <button id="saveSettingsBtn" class="toolbar-button">Save Settings</button>
                 <button id="downloadBtn" class="toolbar-button" disabled>Save SVG</button>
             </div>
@@ -268,9 +270,9 @@
         
         // Hatching layers with spacing in mm (default 1.5mm)
         let hatchLayers = [
-            { thresh: 200, spacing: 1.5, angle: 45, angle_randomness: 0, overshoot: 0 },
-            { thresh: 140, spacing: 1.5, angle: 135, angle_randomness: 0, overshoot: 0 },
-            { thresh: 80, spacing: 1.5, angle: 90, angle_randomness: 0, overshoot: 0 }
+            { thresh: 200, spacing: 1.5, angle: 45, angle_randomness: 0, overshoot: 0, use_image_color: false },
+            { thresh: 140, spacing: 1.5, angle: 135, angle_randomness: 0, overshoot: 0, use_image_color: false },
+            { thresh: 80, spacing: 1.5, angle: 90, angle_randomness: 0, overshoot: 0, use_image_color: false }
         ];
 
         // Settings Map (excluding dynamic layers)
@@ -282,6 +284,94 @@
             'edge_enabled', 'edge_algo', 'edge_thresh', 'edge_min_len', 'edge_smoothing', 'edge_smooth_method', 'edge_border_margin', 'edge_join_radius', 'yolo_show_preview',
             'spacing_override'
         ];
+
+        // Parameter history (all static controls and dynamic hatch layers)
+        let settingsHistory = [];
+        let settingsHistoryIndex = -1;
+        let historyCaptureTimer = null;
+        let isApplyingHistory = false;
+
+        function getSettingsSnapshot() {
+            const snapshot = {};
+            settings.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                snapshot[id] = el.type === 'checkbox' ? el.checked : el.value;
+            });
+            snapshot.hatch_layers = JSON.parse(JSON.stringify(hatchLayers));
+            return snapshot;
+        }
+
+        function updateHistoryButtons() {
+            const undoBtn = document.getElementById('undoSettingsBtn');
+            const redoBtn = document.getElementById('redoSettingsBtn');
+            if (undoBtn) undoBtn.disabled = settingsHistoryIndex <= 0;
+            if (redoBtn) redoBtn.disabled = settingsHistoryIndex >= settingsHistory.length - 1;
+        }
+
+        function commitSettingsHistory() {
+            if (historyCaptureTimer) {
+                clearTimeout(historyCaptureTimer);
+                historyCaptureTimer = null;
+            }
+            if (isApplyingHistory) return;
+
+            const snapshot = getSettingsSnapshot();
+            const serialized = JSON.stringify(snapshot);
+            const current = settingsHistory[settingsHistoryIndex];
+            if (current && JSON.stringify(current) === serialized) {
+                updateHistoryButtons();
+                return;
+            }
+
+            settingsHistory = settingsHistory.slice(0, settingsHistoryIndex + 1);
+            settingsHistory.push(snapshot);
+            settingsHistoryIndex = settingsHistory.length - 1;
+            updateHistoryButtons();
+        }
+
+        function scheduleSettingsHistory() {
+            if (isApplyingHistory) return;
+            clearTimeout(historyCaptureTimer);
+            historyCaptureTimer = setTimeout(commitSettingsHistory, 250);
+        }
+
+        function applySettingsSnapshot(snapshot) {
+            if (!snapshot) return;
+            isApplyingHistory = true;
+
+            settings.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || !Object.prototype.hasOwnProperty.call(snapshot, id)) return;
+                if (el.type === 'checkbox') {
+                    el.checked = Boolean(snapshot[id]);
+                } else {
+                    el.value = snapshot[id];
+                }
+                updateValue(id, snapshot[id]);
+            });
+
+            hatchLayers = JSON.parse(JSON.stringify(snapshot.hatch_layers || hatchLayers));
+            renderLayers();
+            updateYOLOPreviewVisibility();
+            updateCanvasPreview();
+            isApplyingHistory = false;
+            updateHistoryButtons();
+        }
+
+        function undoSettings() {
+            commitSettingsHistory();
+            if (settingsHistoryIndex <= 0) return;
+            settingsHistoryIndex -= 1;
+            applySettingsSnapshot(settingsHistory[settingsHistoryIndex]);
+        }
+
+        function redoSettings() {
+            if (historyCaptureTimer) commitSettingsHistory();
+            if (settingsHistoryIndex >= settingsHistory.length - 1) return;
+            settingsHistoryIndex += 1;
+            applySettingsSnapshot(settingsHistory[settingsHistoryIndex]);
+        }
 
         // UI Update Helpers
         function updateValue(id, val) {
@@ -356,6 +446,7 @@
                         });
                     }
                 }
+                scheduleSettingsHistory();
             });
             
             controlItem.appendChild(controlRow);
@@ -395,6 +486,28 @@
             layerHeader.appendChild(layerActions);
             
             const controlsContainer = document.createElement('div');
+
+            const colorToggleRow = document.createElement('div');
+            colorToggleRow.className = 'layer-toggle-row';
+
+            const colorLabel = document.createElement('label');
+            colorLabel.htmlFor = `layer${layerIndex}_use_image_color`;
+            colorLabel.textContent = 'Pick Image Color';
+            colorLabel.title = 'Color each hatch path from the adjusted image beneath it';
+
+            const colorToggle = document.createElement('input');
+            colorToggle.type = 'checkbox';
+            colorToggle.id = `layer${layerIndex}_use_image_color`;
+            colorToggle.checked = Boolean(layerData.use_image_color);
+            colorToggle.title = colorLabel.title;
+            colorToggle.addEventListener('change', (e) => {
+                hatchLayers[layerIndex].use_image_color = e.target.checked;
+                commitSettingsHistory();
+            });
+
+            colorToggleRow.appendChild(colorLabel);
+            colorToggleRow.appendChild(colorToggle);
+            controlsContainer.appendChild(colorToggleRow);
             
             // Threshold (1 column)
             controlsContainer.appendChild(createControl(controlsContainer, layerIndex, 'thresh', 'Threshold', 0, 255, 1, layerData.thresh));
@@ -444,9 +557,11 @@
                 spacing: 1.5,
                 angle: 90,
                 angle_randomness: 0,
-                overshoot: 0
+                overshoot: 0,
+                use_image_color: false
             });
             renderLayers();
+            commitSettingsHistory();
         }
 
         // Delete a layer
@@ -454,6 +569,7 @@
             if (hatchLayers.length <= 1) return;
             hatchLayers.splice(index, 1);
             renderLayers();
+            commitSettingsHistory();
         }
 
         // Show/hide YOLO preview option based on edge algorithm
@@ -480,6 +596,7 @@
                     if (id === 'edge_algo') {
                         updateYOLOPreviewVisibility();
                     }
+                    scheduleSettingsHistory();
                 });
             }
         });
@@ -602,6 +719,7 @@
             updateValue('image_y_mm', Math.round(centerYMm));
             
             updateCanvasPreview();
+            commitSettingsHistory();
         }
 
         // Upload - no auto-processing
@@ -679,8 +797,15 @@
             params.hatch_stroke = strokeWidth;
             params.edge_stroke = strokeWidth;
             
-            // Add dynamic layers
-            params.hatch_layers = hatchLayers;
+            // Read per-layer toggles directly from the rendered controls so
+            // the request always reflects what is currently visible in the UI.
+            params.hatch_layers = hatchLayers.map((layer, index) => {
+                const colorToggle = document.getElementById(`layer${index}_use_image_color`);
+                return {
+                    ...layer,
+                    use_image_color: colorToggle ? colorToggle.checked : Boolean(layer.use_image_color)
+                };
+            });
 
             try {
                 const res = await fetch('/process', {
@@ -1011,7 +1136,8 @@
                             }
                             return {
                                 ...layer,
-                                spacing: spacing
+                                spacing: spacing,
+                                use_image_color: Boolean(layer.use_image_color)
                             };
                         });
                         renderLayers();
@@ -1026,25 +1152,30 @@
                                 spacing: toMm(settingsData.hatch1_spacing !== undefined ? parseFloat(settingsData.hatch1_spacing) : defaultSpacing),
                                 angle: settingsData.hatch1_angle !== undefined ? parseInt(settingsData.hatch1_angle) : 45,
                                 angle_randomness: settingsData.hatch1_angle_randomness !== undefined ? parseFloat(settingsData.hatch1_angle_randomness) : 0,
-                                overshoot: settingsData.hatch1_overshoot !== undefined ? parseFloat(settingsData.hatch1_overshoot) : 0
+                                overshoot: settingsData.hatch1_overshoot !== undefined ? parseFloat(settingsData.hatch1_overshoot) : 0,
+                                use_image_color: false
                             },
                             {
                                 thresh: settingsData.hatch2_thresh !== undefined ? parseInt(settingsData.hatch2_thresh) : 140,
                                 spacing: toMm(settingsData.hatch2_spacing !== undefined ? parseFloat(settingsData.hatch2_spacing) : defaultSpacing),
                                 angle: settingsData.hatch2_angle !== undefined ? parseInt(settingsData.hatch2_angle) : 135,
                                 angle_randomness: settingsData.hatch2_angle_randomness !== undefined ? parseFloat(settingsData.hatch2_angle_randomness) : 0,
-                                overshoot: settingsData.hatch2_overshoot !== undefined ? parseFloat(settingsData.hatch2_overshoot) : 0
+                                overshoot: settingsData.hatch2_overshoot !== undefined ? parseFloat(settingsData.hatch2_overshoot) : 0,
+                                use_image_color: false
                             },
                             {
                                 thresh: settingsData.hatch3_thresh !== undefined ? parseInt(settingsData.hatch3_thresh) : 80,
                                 spacing: toMm(settingsData.hatch3_spacing !== undefined ? parseFloat(settingsData.hatch3_spacing) : defaultSpacing),
                                 angle: settingsData.hatch3_angle !== undefined ? parseInt(settingsData.hatch3_angle) : 90,
                                 angle_randomness: settingsData.hatch3_angle_randomness !== undefined ? parseFloat(settingsData.hatch3_angle_randomness) : 0,
-                                overshoot: settingsData.hatch3_overshoot !== undefined ? parseFloat(settingsData.hatch3_overshoot) : 0
+                                overshoot: settingsData.hatch3_overshoot !== undefined ? parseFloat(settingsData.hatch3_overshoot) : 0,
+                                use_image_color: false
                             }
                         ];
                         renderLayers();
                     }
+
+                    commitSettingsHistory();
 
                     // Update canvas preview after importing settings
                     setTimeout(() => {
@@ -1087,11 +1218,24 @@
             
             // Initialize layers
             renderLayers();
+
+            // Start parameter history from the initial UI state.
+            commitSettingsHistory();
             
             // Add layer button
             const addLayerBtn = document.getElementById('addLayerBtn');
             if (addLayerBtn) {
                 addLayerBtn.addEventListener('click', addLayer);
+            }
+
+            const undoSettingsBtn = document.getElementById('undoSettingsBtn');
+            if (undoSettingsBtn) {
+                undoSettingsBtn.addEventListener('click', undoSettings);
+            }
+
+            const redoSettingsBtn = document.getElementById('redoSettingsBtn');
+            if (redoSettingsBtn) {
+                redoSettingsBtn.addEventListener('click', redoSettings);
             }
             
             viewConfigs.forEach(config => {
@@ -1177,6 +1321,7 @@
                         updateValue('canvas_height_mm', currentWidth);
                         
                         updateCanvasPreview();
+                        commitSettingsHistory();
                     }
                 });
             }
@@ -1243,6 +1388,7 @@
                                     updateValue('canvas_dpi', preset.dpi);
                                 }
                                 updateCanvasPreview();
+                                commitSettingsHistory();
                             }
                         });
                     }

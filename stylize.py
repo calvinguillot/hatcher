@@ -784,13 +784,20 @@ def yolo_segmentation(img, model_path=None, conf=0.25, return_mask=False):
             return fallback_edges, empty_mask
         return fallback_edges
 
-def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold, stroke_width=1.0, color='black', min_len=0, smoothing=0.0, smooth_method='bezier', join_ends_radius=0.0, angle_randomness=0.0, overshoot=0.0):
+def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
+                         stroke_width=1.0, color='black', min_len=0,
+                         smoothing=0.0, smooth_method='bezier',
+                         join_ends_radius=0.0, angle_randomness=0.0,
+                         overshoot=0.0, color_img=None,
+                         use_image_color=False):
     """
     Generates hatching lines at a specific angle for pixels darker than threshold.
     
     Args:
         angle_randomness: Maximum random angle variation in degrees (0-90). Applied per line.
         overshoot: Maximum random overshoot length in pixels. Applied randomly to segment ends.
+        color_img: RGB source image used to sample hatch colors.
+        use_image_color: Color each path from the average source color beneath it.
     """
     if angle_deg >= 180: angle_deg -= 180
     if angle_deg < 0: angle_deg += 180
@@ -815,8 +822,11 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
     min_rx = min(p[0] for p in rotated_corners)
     max_rx = max(p[0] for p in rotated_corners)
     
-    # Group for this layer
-    group = dwg.g(stroke=color, stroke_width=stroke_width, fill='none', stroke_linecap='round')
+    # Color-enabled paths receive an explicit stroke below. Do not leave a
+    # black inherited stroke on their parent group.
+    group_stroke = 'none' if use_image_color else color
+    group = dwg.g(stroke=group_stroke, stroke_width=stroke_width,
+                  fill='none', stroke_linecap='round')
     segments = []
     
     def apply_overshoot(segment):
@@ -977,6 +987,31 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
         dy = p1[1] - p2[1]
         return math.hypot(dx, dy)
 
+    def sample_segment_color(segment):
+        """Return the average RGB color underneath a hatch segment."""
+        if not use_image_color or color_img is None or not segment:
+            return color
+
+        # Sampling every few points keeps color extraction inexpensive while
+        # still representing the full path, including joined segments.
+        sample_stride = max(1, len(segment) // 64)
+        samples = []
+        for x, y in segment[::sample_stride]:
+            px = max(0, min(width - 1, int(round(x))))
+            py = max(0, min(height - 1, int(round(y))))
+            pixel = color_img.getpixel((px, py))
+            if isinstance(pixel, int):
+                samples.append((pixel, pixel, pixel))
+            else:
+                samples.append(pixel[:3])
+
+        if not samples:
+            return color
+
+        rgb = tuple(int(round(sum(channel) / len(samples)))
+                    for channel in zip(*samples))
+        return '#{:02x}{:02x}{:02x}'.format(*rgb)
+
     def join_segments_grid(seg_list, radius):
         """
         Spatially accelerated join: bucket endpoints into a grid (cell = radius),
@@ -1071,7 +1106,9 @@ def generate_hatch_lines(dwg, img, width, height, angle_deg, spacing, threshold,
     for segment in segments:
         path_data = smooth_path_segment(segment, smoothing=render_smoothing, method=smooth_method)
         if path_data:
-            group.add(dwg.path(d=path_data))
+            path_color = sample_segment_color(segment) if use_image_color else color
+            path = dwg.path(d=path_data, stroke=path_color)
+            group.add(path)
 
     return group
 

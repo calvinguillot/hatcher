@@ -97,21 +97,24 @@ def process_image():
                     'angle': int(data.get('hatch1_angle', 45)),
                     'angle_randomness': float(data.get('hatch1_angle_randomness', 0.0)),
                     'overshoot': float(data.get('hatch1_overshoot', 0.0)),
-                    'spacing': float(data.get('hatch1_spacing', default_spacing_mm))
+                    'spacing': float(data.get('hatch1_spacing', default_spacing_mm)),
+                    'use_image_color': False
                 },
                 {
                     'thresh': int(data.get('hatch2_thresh', 140)),
                     'angle': int(data.get('hatch2_angle', 135)),
                     'angle_randomness': float(data.get('hatch2_angle_randomness', 0.0)),
                     'overshoot': float(data.get('hatch2_overshoot', 0.0)),
-                    'spacing': float(data.get('hatch2_spacing', default_spacing_mm))
+                    'spacing': float(data.get('hatch2_spacing', default_spacing_mm)),
+                    'use_image_color': False
                 },
                 {
                     'thresh': int(data.get('hatch3_thresh', 80)),
                     'angle': int(data.get('hatch3_angle', 90)),
                     'angle_randomness': float(data.get('hatch3_angle_randomness', 0.0)),
                     'overshoot': float(data.get('hatch3_overshoot', 0.0)),
-                    'spacing': float(data.get('hatch3_spacing', default_spacing_mm))
+                    'spacing': float(data.get('hatch3_spacing', default_spacing_mm)),
+                    'use_image_color': False
                 }
             ]
         
@@ -237,7 +240,10 @@ def process_image():
                                             smooth_method=hatch_smooth_method,
                                             join_ends_radius=hatch_join_ends,
                                             angle_randomness=float(layer.get('angle_randomness', 0.0)), 
-                                            overshoot=float(layer.get('overshoot', 0.0)))
+                                            overshoot=float(layer.get('overshoot', 0.0)),
+                                            color_img=canvas,
+                                            use_image_color=bool(layer.get('use_image_color', False)))
+                hatch['id'] = f'layer-hatch-{i + 1}'
                 hatching_group.add(hatch)
             
             dwg.add(hatching_group)

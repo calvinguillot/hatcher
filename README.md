@@ -14,6 +14,7 @@
 - **Advanced Hatching System**
   - Multiple configurable hatching layers
   - Adjustable angle, spacing, and threshold per layer
+  - Optional per-layer colors sampled from the underlying image
   - Angle randomness and overshoot controls
   - Smoothing options (Bezier, Chaikin, Hermite, Sliding Average)
 
@@ -26,6 +27,7 @@
 - **Interactive Web Interface**
   - Real-time preview of original, edges, hatching, and combined result
   - Synchronized zoom and pan across all views
+  - Undo and redo history for all processing parameters
   - Settings import/export functionality
   - Live parameter adjustment
 
@@ -139,13 +141,9 @@ hatcher/
 2. **Move 10mm up** from the home position before starting
 3. This ensures proper clearance and prevents damage to the surface
 
-### Converting SVG to Gcode
+### SVG to Gcode in inkscape
 
-You'll need to use a tool to convert the generated SVG to Gcode. Popular options include:
-
-- Inkscape with Gcode extensions
-- Universal Gcode Sender
-- Custom conversion scripts
+- Z safe height for G00 in inkscape should be set to anything above 2.5mm
 
 ## Configuration
 
@@ -173,6 +171,7 @@ Each hatching layer can be configured with:
 - **Threshold**: Brightness threshold (0-255, lower = darker areas)
 - **Spacing**: Distance between lines in millimeters
 - **Angle**: Line angle in degrees (0-180)
+- **Pick Image Color**: Colors each hatch path from the adjusted image beneath it
 - **Angle Randomness**: Random variation in angle (0-10 degrees)
 - **Overshoot**: Line extension factor (0 = none, 1 = twice as long)
 
@@ -192,7 +191,7 @@ Each hatching layer can be configured with:
 
 ## Version
 
-Current version: **v0.6.2**
+Current version: **v0.7.1**
 
 ## License
 
